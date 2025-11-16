@@ -9,14 +9,13 @@ import { useSupabaseSet } from "../hooks/supabaseset";
 const GalleryPage: React.FC = () => {
   const { t } = useLanguage();
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   // lightbox for a single row: muestra portada + imagen1..imagen4
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  
   const client = useSupabaseSet();
   const [admin, setAdmin] = useState<any | null>(null);
 
@@ -37,10 +36,6 @@ const GalleryPage: React.FC = () => {
     })();
     return () => { mounted = false; };
   }, [client]);
-
-  useEffect(() => {
-    filterImages();
-  }, [galleryItems, selectedCategory]);
 
   const loadGallery = async () => {
     setLoading(true);
@@ -64,15 +59,7 @@ const GalleryPage: React.FC = () => {
     }
   };
 
-  const filterImages = () => {
-    if (selectedCategory === "all") {
-      setFilteredItems(galleryItems);
-    } else {
-      setFilteredItems(
-        galleryItems.filter((item) => item.category === selectedCategory)
-      );
-    }
-  };
+  
 
   const openLightbox = (index: number) => {
     // legacy: keep selected index for whole-grid navigation if needed
@@ -90,14 +77,14 @@ const GalleryPage: React.FC = () => {
 
   const nextImage = () => {
     if (selectedImage !== null) {
-      setSelectedImage((selectedImage + 1) % filteredItems.length);
+      setSelectedImage((selectedImage + 1) % galleryItems.length);
     }
   };
 
   const prevImage = () => {
     if (selectedImage !== null) {
       setSelectedImage(
-        (selectedImage - 1 + filteredItems.length) % filteredItems.length
+        (selectedImage - 1 + galleryItems.length) % galleryItems.length
       );
     }
   };
@@ -120,39 +107,17 @@ const GalleryPage: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [lightboxOpen, lightboxImages.length]);
 
-  const categories = [
-    { value: "all", label: "Todas", count: galleryItems.length },
-    {
-      value: "mangroves",
-      label: "Manglares",
-      count: galleryItems.filter((i) => i.category === "mangroves").length,
-    },
-    {
-      value: "underwater",
-      label: "Submarinas",
-      count: galleryItems.filter((i) => i.category === "underwater").length,
-    },
-    {
-      value: "nature",
-      label: "Naturaleza",
-      count: galleryItems.filter((i) => i.category === "nature").length,
-    },
-    {
-      value: "sunset",
-      label: "Atardeceres",
-      count: galleryItems.filter((i) => i.category === "sunset").length,
-    },
-    {
-      value: "wildlife",
-      label: "Fauna",
-      count: galleryItems.filter((i) => i.category === "wildlife").length,
-    },
-    {
-      value: "aerial",
-      label: "Aéreas",
-      count: galleryItems.filter((i) => i.category === "aerial").length,
-    },
-  ];
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'mangroves': return 'Mangroves';
+      case 'underwater': return 'Underwater';
+      case 'nature': return 'Nature';
+      case 'sunset': return 'Sunset';
+      case 'wildlife': return 'Wildlife';
+      case 'aerial': return 'Aerial';
+      default: return 'General';
+    }
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -228,33 +193,11 @@ const GalleryPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Filters */}
+      {/* Results Count */}
       <section className="py-8 bg-white shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-4">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <div className="flex flex-wrap gap-2 justify-center">
-                {categories.map((category) => (
-                  <button
-                    key={category.value}
-                    onClick={() => setSelectedCategory(category.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-                      selectedCategory === category.value
-                        ? "bg-teal-500 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {category.label} ({category.count})
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Results Count */}
           <div className="mt-4 text-center text-gray-600">
-            Showing {filteredItems.length} of {galleryItems.length} photos
+            Showing {galleryItems.length} photos
           </div>
         </div>
       </section>
@@ -262,25 +205,17 @@ const GalleryPage: React.FC = () => {
       {/* Gallery Grid */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredItems.length === 0 ? (
+          {galleryItems.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📸</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">
                 No photos found
               </h3>
-              <p className="text-gray-600 mb-6">
-                There are no photos in this category
-              </p>
-              <button
-                onClick={() => setSelectedCategory("all")}
-                className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200"
-              >
-                View All Photos
-              </button>
+              <p className="text-gray-600 mb-6">There are no photos yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredItems.map((item, index) => (
+              {galleryItems.map((item, index) => (
                 <div
                   key={item.id}
                   className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer"
@@ -324,8 +259,7 @@ const GalleryPage: React.FC = () => {
                           item.category || "general"
                         )}`}
                       >
-                        {categories.find((c) => c.value === item.category)
-                          ?.label || "General"}
+                        {getCategoryLabel(item.category || 'general')}
                       </span>
                     </div>
 
