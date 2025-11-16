@@ -11,7 +11,12 @@ const Home: React.FC = () => {
     <div className="min-h-screen">
       <Hero />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <TripAdvisorWidget images={["/images/hero-mangrove-tour.jpg","/images/snorkeling-adventure.webp","/images/sunset-boat-tour.jpg"]} title="Best of Roatán" ctaHref="/contact" />
+        <TripAdvisorWidget
+          images={["/images/hero-mangrove-tour.jpg","/images/snorkeling-adventure.webp","/images/sunset-boat-tour.jpg"]}
+          title="Best of Roatán"
+          ctaText="TripAdvisor"
+          ctaHref="https://www.tripadvisor.com/Attraction_Review-g292019-d19846218-Reviews-Roatan_Robert_Tour-Roatan_Bay_Islands.html"
+        />
       </div>
       <Services />
       <Experiences />
