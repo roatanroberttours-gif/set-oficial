@@ -10,6 +10,7 @@ export interface Tour {
   included?: string[];
   requirements?: string;
   category?: string;
+  max_personas?: number;
 }
 
 export interface Experience {
@@ -28,6 +29,7 @@ export interface GalleryItem {
   title: string;
   description?: string;
   category?: string;
+  images?: string[];
 }
 
 // Tipos para el sistema de idiomas

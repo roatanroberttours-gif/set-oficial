@@ -1,6 +1,6 @@
-# 🏝️ Roatan East Hidden Gem - Sitio Web de Tours
+# 🏝️ Roatan Robert Tours - Sitio Web de Tours
 
-Una página web moderna y responsive para **Roatan East Hidden Gem**, empresa de tours turísticos especializada en manglares y aventuras naturales en Roatán, Honduras.
+Una página web moderna y responsive para **Roatan Robert Tours**, empresa de tours turísticos especializada en manglares y aventuras naturales en Roatán, Honduras.
 
 ## 🌟 Características Principales
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Calendar, Users, CreditCard, Clock, MapPin } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour, BookingForm } from "../types";
-import { getTours } from "../services/googleSheets";
+import { useSupabaseSet } from '../hooks/supabaseset';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -17,6 +17,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
 }) => {
   const { t } = useLanguage();
   const [tours, setTours] = useState<Tour[]>([]);
+  const client = useSupabaseSet();
+  const [admin, setAdmin] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<BookingForm>({
@@ -36,6 +38,20 @@ const BookingModal: React.FC<BookingModalProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        if (error) throw error;
+        if (mounted) setAdmin(data || null);
+      } catch (err) {
+        console.error('Error loading admin in BookingModal', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [client]);
+
+  useEffect(() => {
     if (selectedTour) {
       setFormData((prev) => ({ ...prev, serviceId: selectedTour.id }));
     }
@@ -44,10 +60,36 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const loadTours = async () => {
     setLoading(true);
     try {
-      const toursData = await getTours();
-      setTours(toursData);
+      const { data, error } = await client.from('paquetes').select('*');
+      if (error) throw error;
+      const mapped: Tour[] = (data || []).map((paq: any) => {
+        const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i + 1}`]);
+        const image = images.find((img: any) => img) || '';
+        let included: string[] | undefined = undefined;
+        try {
+          if (paq.incluye) {
+            const parsed = JSON.parse(paq.incluye);
+            if (Array.isArray(parsed)) included = parsed.map(String);
+          }
+        } catch (e) {
+          included = undefined;
+        }
+        return {
+          id: String(paq.id),
+          name: paq.titulo || '',
+          description: paq.descripcion || '',
+          personPrice: paq.precio_por_persona ?? (paq.precio ?? 0),
+          price: paq.precio_por_persona ?? (paq.precio ?? 0),
+          image: image,
+          duration: paq.duracion || '',
+          included,
+          max_personas: paq.max_personas ?? undefined,
+          category: paq.categoria || 'adventure',
+        } as Tour;
+      });
+      setTours(mapped);
     } catch (error) {
-      console.error("Error loading tours:", error);
+      console.error("Error loading tours from Supabase:", error);
     } finally {
       setLoading(false);
     }
@@ -78,22 +120,22 @@ const BookingModal: React.FC<BookingModalProps> = ({
     // En el paso 3, el botón será para WhatsApp, no submit
   };
 
-  // Generar mensaje de WhatsApp con formato
+  // Generate WhatsApp message (English)
   const getWhatsappMessage = () => {
     return (
-      `¡Hola! Me gustaría reservar un tour.\n\n` +
+      `Hello! I'd like to book a tour.\n\n` +
       `*Tour:* ${selectedTourData?.name || ""}\n` +
-      `*Fecha:* ${formData.date}\n` +
-      `*Personas:* ${formData.numberOfPeople}\n` +
-      `*Precio por persona:* $${
+      `*Date:* ${formData.date}\n` +
+      `*People:* ${formData.numberOfPeople}\n` +
+      `*Price per person:* $${
         selectedTourData?.personPrice || selectedTourData?.price || ""
       }\n` +
       `*Total:* $${totalPrice}\n` +
-      `*Nombre:* ${formData.fullName}\n` +
+      `*Name:* ${formData.fullName}\n` +
       `*Email:* ${formData.email}\n` +
-      `*Teléfono:* ${formData.phone}\n` +
+      `*Phone:* ${formData.phone}\n` +
       (formData.specialRequests
-        ? `*Solicitudes especiales:* ${formData.specialRequests}\n`
+        ? `*Special requests:* ${formData.specialRequests}\n`
         : "")
     );
   };
@@ -148,9 +190,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
             ))}
           </div>
           <div className="flex justify-between mt-2 text-xs text-gray-600">
-            <span>Servicio</span>
-            <span>Detalles</span>
-            <span>Confirmar</span>
+            <span>Service</span>
+            <span>Details</span>
+            <span>Confirm</span>
           </div>
         </div>
 
@@ -169,7 +211,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
-                  <option value="">Seleccionar tour...</option>
+                  <option value="">Select a tour...</option>
                   {tours.map((tour) => (
                     <option key={tour.id} value={tour.id}>
                       {tour.name} - ${tour.price}
@@ -236,7 +278,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   >
                     {[...Array(10)].map((_, i) => (
                       <option key={i} value={i + 1}>
-                        {i + 1} {i === 0 ? "persona" : "personas"}
+                        {i + 1} {i === 0 ? "person" : "people"}
                       </option>
                     ))}
                   </select>
@@ -264,7 +306,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     onChange={handleInputChange}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="Nombre completo"
+                      placeholder="Full name"
                   />
                 </div>
 
@@ -279,7 +321,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     onChange={handleInputChange}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="correo@ejemplo.com"
+                    placeholder="you@example.com"
                   />
                 </div>
               </div>
@@ -308,7 +350,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                   onChange={handleInputChange}
                   rows={3}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="Alguna solicitud especial o información adicional..."
+                  placeholder="Any special requests or additional information..."
                 />
               </div>
             </div>
@@ -318,13 +360,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
           {step === 3 && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Resumen
+                Summary
               </h3>
 
               {/* Booking Summary */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium text-gray-800 mb-3">
-                  Resumen de la Reserva
+                  Booking Summary
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -334,15 +376,15 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Fecha:</span>
+                    <span>Date:</span>
                     <span>{formData.date}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Personas:</span>
+                    <span>People:</span>
                     <span>{formData.numberOfPeople}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Precio por persona:</span>
+                    <span>Price per person:</span>
                     <span>${selectedTourData?.personPrice}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between font-semibold">
@@ -376,12 +418,18 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 {t.common.next}
               </button>
             ) : (
-              <a
-                href={`https://wa.me/50432267504?text=${encodeURIComponent(
-                  getWhatsappMessage()
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => {
+                  const phone = admin?.celular ? admin.celular.replace(/[^0-9+]/g, '') : '0';
+                  const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(getWhatsappMessage())}`;
+                  try {
+                    window.open(waUrl, '_blank', 'noopener');
+                  } catch (e) {
+                    // fallback for environments where window.open might be blocked
+                    window.location.href = waUrl;
+                  }
+                }}
                 className="flex-1 bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-200 text-center font-semibold text-lg flex items-center justify-center gap-2"
               >
                 <svg
@@ -403,8 +451,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     d="M8.625 9.75a3.375 3.375 0 0 0 5.25 4.5l.375-.375"
                   />
                 </svg>
-                Confirmar por WhatsApp
-              </a>
+                Confirm via WhatsApp
+              </button>
             )}
           </div>
         </form>

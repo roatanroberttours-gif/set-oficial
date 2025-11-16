@@ -1,5 +1,6 @@
 import React from 'react';
 import Contact from '../components/Contact';
+import { Link } from 'react-router-dom';
 
 const ContactPage: React.FC = () => {
   return (
@@ -10,23 +11,23 @@ const ContactPage: React.FC = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Contáctanos
+              Contact Us
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8">
-              Estamos aquí para hacer realidad tu aventura en Roatán
+              We're here to make your Roatán adventure come true
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
               <div className="text-center">
                 <div className="text-3xl font-bold">24/7</div>
-                <div className="text-blue-200">Disponibilidad WhatsApp</div>
+                <div className="text-blue-200">WhatsApp Availability</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">&lt; 1h</div>
-                <div className="text-blue-200">Tiempo de Respuesta</div>
+                <div className="text-blue-200">Response Time</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">3+</div>
-                <div className="text-blue-200">Años de Experiencia</div>
+                <div className="text-blue-200">Years of Experience</div>
               </div>
             </div>
           </div>
@@ -43,96 +44,47 @@ const ContactPage: React.FC = () => {
             {/* FAQ Section */}
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
-                Preguntas Frecuentes
+                Frequently Asked Questions
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Cuál es la mejor época para visitar?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Roatán es perfecto todo el año. La temporada seca va de febrero a agosto, 
-                    pero nuestros tours operan durante todo el año con las mejores condiciones de seguridad.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">What is the best time to visit?</h3>
+                  <p className="text-gray-600 text-sm">Roatan is perfect year-round. The dry season runs from February to August, but our tours operate all year with the best safety conditions.</p>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Qué debo traer para los tours?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Recomendamos protector solar, repelente, ropa cómoda, calzado antideslizante, 
-                    y cambio de ropa para actividades acuáticas. Nosotros proporcionamos todo el equipo necesario.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">What should I bring for the tours?</h3>
+                  <p className="text-gray-600 text-sm">We recommend sunscreen, insect repellent, comfortable clothing, non-slip shoes, and a change of clothes for water activities. We provide all necessary equipment.</p>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Los tours son aptos para niños?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Sí, la mayoría de nuestros tours son familiares. Algunos tienen restricciones de edad 
-                    por seguridad. Consulta los detalles de cada tour o contáctanos para recomendaciones específicas.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">Are the tours suitable for children?</h3>
+                  <p className="text-gray-600 text-sm">Yes, most of our tours are family-friendly. Some have age restrictions for safety. Check each tour's details or contact us for specific recommendations.</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Incluyen transporte desde el hotel?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Sí, todos nuestros tours incluyen transporte gratuito desde hoteles en Roatán Este. 
-                    Para otras áreas, coordinaremos el punto de encuentro más conveniente.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">Where does the tour start if I come by cruise ship?</h3>
+                  <p className="text-gray-600 text-sm">Each excursion has a designated meeting point, which we will confirm at the time of booking, to ensure convenience and easy access.</p>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Qué métodos de pago aceptan?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Aceptamos efectivo (dólares americanos y lempiras), PayPal, y transferencias bancarias. 
-                    Para reservas online preferimos PayPal por su seguridad.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">What payment methods do you accept?</h3>
+                  <p className="text-gray-600 text-sm">We accept payments via PayPal, Zelle, credit or debit cards, and bank transfers. You can also pay in cash (dollars or lempiras) on the day of the tour. We do not take online reservations. Contact us directly to confirm your reservation and arrange payment.</p>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    ¿Cuál es su política de cancelación?
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Cancelación gratuita hasta 24 horas antes del tour. Para cancelaciones por mal clima, 
-                    ofrecemos reagendamiento o reembolso completo.
-                  </p>
+                  <h3 className="font-semibold text-gray-800 mb-2">What is your cancellation policy?</h3>
+                  <p className="text-gray-600 text-sm">You can view our full refund policy <Link to="/politica-de-cancelacion" className="text-teal-600 underline">here</Link>.</p>
                 </div>
               </div>
             </div>
 
-            {/* Emergency Contact */}
-            <div className="mt-16 bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-              <h3 className="text-2xl font-bold text-red-800 mb-4">
-                Contacto de Emergencia
-              </h3>
-              <p className="text-red-700 mb-4">
-                Si tienes una emergencia durante tu tour o necesitas asistencia inmediata:
-              </p>
-              <div className="space-y-2">
-                <div className="text-lg font-semibold text-red-800">
-                  📞 +504 3226-7504
-                </div>
-                <div className="text-lg font-semibold text-red-800">
-                  📱 WhatsApp 24/7
-                </div>
-              </div>
-              <p className="text-sm text-red-600 mt-4">
-                Nuestro equipo está siempre disponible para garantizar tu seguridad y bienestar.
-              </p>
-            </div>
+          
           </div>
         </div>
       </section>

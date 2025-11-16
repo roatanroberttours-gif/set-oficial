@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Clock, Users, Star, ArrowRight, Calendar } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
-import { getTours } from "../services/googleSheets";
+import { useSupabaseSet } from "../hooks/supabaseset";
 import BookingModal from "./BookingModal";
 
 const Services: React.FC = () => {
@@ -12,21 +12,50 @@ const Services: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTour, setSelectedTour] = useState<Tour | undefined>(undefined);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const client = useSupabaseSet();
 
   useEffect(() => {
+    const loadTours = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await client.from('paquetes').select('*');
+        if (error) throw error;
+        const mapped: Tour[] = (data || []).map((paq: any) => {
+          // get first non-empty image
+          const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]);
+          const image = images.find((img: any) => img) || '';
+          let included: string[] | undefined = undefined;
+          try {
+            if (paq.incluye) {
+              const parsed = JSON.parse(paq.incluye);
+              if (Array.isArray(parsed)) included = parsed.map(String);
+            }
+          } catch (e) {
+            included = undefined;
+          }
+          return {
+            id: String(paq.id),
+            name: paq.titulo || '',
+            description: paq.descripcion || '',
+            personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
+            price: paq.precio_por_persona ?? (paq.price ?? 0),
+            image: image,
+            duration: paq.duracion || '',
+            included,
+            max_personas: paq.max_personas ?? undefined,
+            category: paq.categoria || 'adventure',
+          } as Tour;
+        });
+        setTours(mapped.slice(0, 6));
+      } catch (err) {
+        console.error('Error loading paquetes from Supabase:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadTours();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const loadTours = async () => {
-    try {
-      const toursData = await getTours();
-      setTours(toursData.slice(0, 6)); // Mostrar solo los primeros 6 en home
-    } catch (error) {
-      console.error("Error loading tours:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBookNow = (tour: Tour) => {
     setSelectedTour(tour);
@@ -133,10 +162,7 @@ const Services: React.FC = () => {
                   </span>
                 </div>
                 <div className="absolute top-4 right-4">
-                  <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
-                    <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                    <span className="text-sm font-medium">4.9</span>
-                  </div>
+                
                 </div>
               </div>
 
@@ -160,7 +186,7 @@ const Services: React.FC = () => {
                   )}
                   <div className="flex items-center text-sm text-gray-500">
                     <Users className="w-4 h-4 mr-2 text-teal-500" />
-                    <span>Grupos pequeños (máx. 8 personas)</span>
+                    <span>Grupos pequeños (máx. {tour.max_personas ?? 8} personas)</span>
                   </div>
                 </div>
 

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
-import { getTours } from "../services/googleSheets";
+import { useSupabaseSet } from "../hooks/supabaseset";
 import BookingModal from "../components/BookingModal";
 
 const ServicesPage: React.FC = () => {
@@ -32,12 +32,40 @@ const ServicesPage: React.FC = () => {
     filterTours();
   }, [tours, selectedCategory, searchTerm]);
 
+  const client = useSupabaseSet();
+
   const loadTours = async () => {
     try {
-      const toursData = await getTours();
-      setTours(toursData);
+      setLoading(true);
+      const { data, error } = await client.from('paquetes').select('*');
+      if (error) throw error;
+      const mapped: Tour[] = (data || []).map((paq: any) => {
+        const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]);
+        const image = images.find((img: any) => img) || '';
+        let included: string[] | undefined = undefined;
+        try {
+          if (paq.incluye) {
+            const parsed = JSON.parse(paq.incluye);
+            if (Array.isArray(parsed)) included = parsed.map(String);
+          }
+        } catch (e) {
+          included = undefined;
+        }
+        return {
+          id: String(paq.id),
+          name: paq.titulo || '',
+          description: paq.descripcion || '',
+          personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
+          price: paq.precio_por_persona ?? (paq.price ?? 0),
+          image: image,
+          duration: paq.duracion || '',
+          included,
+          category: paq.categoria || 'adventure',
+        } as Tour;
+      });
+      setTours(mapped);
     } catch (error) {
-      console.error("Error loading tours:", error);
+      console.error("Error loading tours from Supabase:", error);
     } finally {
       setLoading(false);
     }

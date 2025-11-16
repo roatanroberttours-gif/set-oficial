@@ -24,9 +24,9 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Obtener idioma guardado del localStorage o usar español por defecto
+    // Obtener idioma guardado del localStorage o usar inglés por defecto
     const savedLanguage = localStorage.getItem('roatan-language') as Language;
-    return savedLanguage || 'es';
+    return savedLanguage || 'en';
   });
 
   const setLanguage = (lang: Language) => {

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Instagram, Facebook, ChevronUp } from 'lucide-react';
+import { useSupabaseSet } from '../hooks/supabaseset';
 
 const FloatingSocial: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const client = useSupabaseSet();
+  const [admin, setAdmin] = useState<any | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -12,6 +15,20 @@ const FloatingSocial: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        if (error) throw error;
+        if (mounted) setAdmin(data || null);
+      } catch (err) {
+        console.error('Error loading admin in FloatingSocial', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [client]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -23,21 +40,21 @@ const FloatingSocial: React.FC = () => {
   const socialButtons = [
     {
       name: 'WhatsApp',
-      href: 'https://wa.me/50432267504?text=Hola!%20Me%20interesa%20información%20sobre%20sus%20tours',
+      href: admin?.celular ? `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}` : 'https://wa.me/50432267504?text=Hola!%20Me%20interesa%20información%20sobre%20sus%20tours',
       icon: <MessageCircle className="w-6 h-6" />,
       bgColor: 'bg-green-500 hover:bg-green-600',
       pulse: true,
     },
     {
       name: 'Instagram',
-      href: 'https://instagram.com/roataneasthiddengem',
+      href: admin?.instagram ? (admin.instagram.startsWith('http') ? admin.instagram : `https://${admin.instagram}`) : 'https://instagram.com/roataneasthiddengem',
       icon: <Instagram className="w-6 h-6" />,
       bgColor: 'bg-pink-500 hover:bg-pink-600',
       pulse: false,
     },
     {
       name: 'Facebook',
-      href: 'https://facebook.com/roataneasthiddengem',
+      href: admin?.facebook ? (admin.facebook.startsWith('http') ? admin.facebook : `https://${admin.facebook}`) : 'https://facebook.com/roataneasthiddengem',
       icon: <Facebook className="w-6 h-6" />,
       bgColor: 'bg-blue-500 hover:bg-blue-600',
       pulse: false,

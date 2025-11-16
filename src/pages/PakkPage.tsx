@@ -17,6 +17,9 @@ export type Pakk = {
   incluye: string;
   descripcion: string;
   duracion: string;
+  categoria?: string;
+  precio_por_persona?: number;
+  max_personas?: number;
 };
 
 export default function PakkPage() {
@@ -32,7 +35,7 @@ export default function PakkPage() {
   const [deleting, setDeleting] = useState<number | null>(null);
     const handleDelete = async (id?: number) => {
       if (!id) return;
-      const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este paquete? Esta acción no se puede deshacer.");
+      const confirmDelete = window.confirm("Are you sure you want to delete this package? This action cannot be undone.");
       if (!confirmDelete) return;
       setDeleting(id);
       const { error } = await client.from("paquetes").delete().eq("id", id);
@@ -111,9 +114,12 @@ export default function PakkPage() {
     };
   const [newPakk, setNewPakk] = useState<Pakk>({
     titulo: '',
-    incluye: '[]', // JSON string
+    incluye: '', // texto plano, se convertirá a JSON al guardar
     descripcion: '',
     duracion: '',
+    categoria: '',
+    precio_por_persona: undefined,
+    max_personas: undefined,
   });
   const [images, setImages] = useState<(File | null)[]>(Array(10).fill(null));
   const [addError, setAddError] = useState<string | null>(null);
@@ -138,6 +144,12 @@ export default function PakkPage() {
     setNewPakk((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Procesar el texto de incluye en puntos (cada palabra/frase separada por dos espacios)
+  function getIncluyeArray(str: string) {
+    if (!str) return [];
+    return str.split(/  +/).map(s => s.trim()).filter(Boolean);
+  }
+
   // Helper para mostrar el campo incluye como lista
   function renderIncluye(incluye: string) {
     try {
@@ -156,6 +168,16 @@ export default function PakkPage() {
       return <span>{incluye}</span>;
     }
     return <span>{incluye}</span>;
+  }
+
+  // Formatear número a USD
+  function formatUSD(value?: number) {
+    if (value === undefined || value === null) return '';
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    } catch {
+      return `$${value}`;
+    }
   }
 
   const handleImageChange = (idx: number, e: ChangeEvent<HTMLInputElement>) => {
@@ -191,6 +213,9 @@ export default function PakkPage() {
     }
     // Construir objeto para insertar
     const paqueteToInsert: any = { ...newPakk };
+    // Guardar incluye como JSON string
+    paqueteToInsert.incluye = JSON.stringify(getIncluyeArray(newPakk.incluye));
+    paqueteToInsert.categoria = newPakk.categoria || null;
     for (let i = 0; i < 10; i++) {
       paqueteToInsert[`imagen${i+1}`] = imageUrls[i] || '';
     }
@@ -199,7 +224,7 @@ export default function PakkPage() {
       setAddError(error.message);
     } else if (data && data.length > 0) {
       setPakk((prev) => [data[0], ...prev]);
-      setNewPakk({ titulo: '', incluye: '', descripcion: '', duracion: '' });
+      setNewPakk({ titulo: '', incluye: '', descripcion: '', duracion: '', categoria: '' });
       setImages(Array(10).fill(null));
     }
     setAdding(false);
@@ -207,12 +232,26 @@ export default function PakkPage() {
 
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen">
-      <h1 className="text-4xl font-extrabold mb-8 text-center text-blue-800 drop-shadow">Pakk</h1>
+        <h1 className="text-4xl font-extrabold mb-8 text-center text-blue-800 drop-shadow">Pakk</h1>
       <form onSubmit={handleAdd} className="mb-10 bg-white/90 p-6 rounded-xl shadow-lg max-w-2xl mx-auto border border-blue-100">
-        <h2 className="text-2xl font-bold mb-4 text-blue-700">Agregar nuevo paquete</h2>
+        <h2 className="text-2xl font-bold mb-4 text-blue-700">Add New Package</h2>
         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="number" name="precio_por_persona" value={newPakk.precio_por_persona ?? ''} onChange={e => setNewPakk(prev => ({ ...prev, precio_por_persona: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Precio por persona (USD)" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" min="0" step="0.01" />
+                    <input type="number" name="max_personas" value={newPakk.max_personas ?? ''} onChange={e => setNewPakk(prev => ({ ...prev, max_personas: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Máx. de personas" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" min="1" step="1" />
           <input name="titulo" value={newPakk.titulo} onChange={handleChange} placeholder="Título" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" required />
-          <textarea name="incluye" value={newPakk.incluye} onChange={handleChange} placeholder='Incluye (JSON array, ej: [{"item":"valor"}])' className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300 min-h-[60px]" />
+          <input name="categoria" value={newPakk.categoria ?? ''} onChange={handleChange} placeholder="Category" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" />
+          <div>
+            <textarea name="incluye" value={newPakk.incluye} onChange={handleChange} placeholder='Write each item separated by two spaces' className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300 min-h-[60px]" />
+            <div className="mt-2">
+              {getIncluyeArray(newPakk.incluye).length > 0 && (
+                <ul className="list-disc pl-5 text-sm text-blue-700">
+                  {getIncluyeArray(newPakk.incluye).map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
         <div className="mb-4">
           <textarea name="descripcion" value={newPakk.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" />
@@ -228,11 +267,11 @@ export default function PakkPage() {
             </div>
           ))}
         </div>
-        <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-2 rounded-lg font-bold shadow hover:from-blue-700 hover:to-blue-500 transition" disabled={adding}>{adding ? 'Agregando...' : 'Agregar'}</button>
+        <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-2 rounded-lg font-bold shadow hover:from-blue-700 hover:to-blue-500 transition" disabled={adding}>{adding ? 'Adding...' : 'Add'}</button>
         {addError && <div className="text-red-600 mt-2">{addError}</div>}
       </form>
       {loading ? (
-        <div>Cargando datos...</div>
+        <div>Loading data...</div>
       ) : error ? (
         <div className="text-red-600">Error: {error}</div>
       ) : (
@@ -254,13 +293,25 @@ export default function PakkPage() {
                       );
                     })}
                   </div>
-                  <input name="titulo" value={editPakk?.titulo || ''} onChange={handleEditChange} placeholder="Título" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
-                  <textarea name="incluye" value={editPakk?.incluye || ''} onChange={handleEditChange} placeholder='Incluye (JSON array, ej: [{"item":"valor"}])' className="w-full border border-blue-200 rounded px-3 py-2 mb-2 min-h-[60px]" />
+                  <input name="titulo" value={editPakk?.titulo || ''} onChange={handleEditChange} placeholder="Title" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
+                  <input name="categoria" value={editPakk?.categoria || ''} onChange={handleEditChange} placeholder="Category" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
+                  <textarea name="incluye" value={editPakk?.incluye ? JSON.parse(editPakk.incluye).join('  ') : ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, incluye: JSON.stringify(getIncluyeArray(e.target.value)) } : null)} placeholder='Write each item separated by two spaces' className="w-full border border-blue-200 rounded px-3 py-2 mb-2 min-h-[60px]" />
+                  {editPakk?.incluye && (
+                    <ul className="list-disc pl-5 text-sm text-blue-700 mb-2">
+                      {JSON.parse(editPakk.incluye).map((item: string, i: number) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  )}
                   <textarea name="descripcion" value={editPakk?.descripcion || ''} onChange={handleEditChange} placeholder="Descripción" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
-                  <input name="duracion" value={editPakk?.duracion || ''} onChange={handleEditChange} placeholder="Duración" className="w-full border border-blue-200 rounded px-3 py-2 mb-4" />
+                  <input name="duracion" value={editPakk?.duracion || ''} onChange={handleEditChange} placeholder="Duration" className="w-full border border-blue-200 rounded px-3 py-2 mb-4" />
+                  <div className="mb-2 grid grid-cols-2 gap-2">
+                    <input type="number" name="precio_por_persona" value={editPakk?.precio_por_persona ?? ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, precio_por_persona: e.target.value ? Number(e.target.value) : undefined } : null)} placeholder="Precio por persona (USD)" className="w-full border border-blue-200 rounded px-3 py-2" min="0" step="0.01" />
+                    <input type="number" name="max_personas" value={editPakk?.max_personas ?? ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, max_personas: e.target.value ? Number(e.target.value) : undefined } : null)} placeholder="Máx. de personas" className="w-full border border-blue-200 rounded px-3 py-2" min="1" step="1" />
+                  </div>
                   <div className="flex gap-2 justify-end">
-                    <button onClick={handleEditSave} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 transition" disabled={adding}>{adding ? 'Guardando...' : 'Guardar'}</button>
-                    <button onClick={handleEditCancel} className="bg-gray-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-gray-500 transition">Cancelar</button>
+                    <button onClick={handleEditSave} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 transition" disabled={adding}>{adding ? 'Saving...' : 'Save'}</button>
+                    <button onClick={handleEditCancel} className="bg-gray-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-gray-500 transition">Cancel</button>
                   </div>
                   {editError && <div className="text-red-600 mt-2">{editError}</div>}
                 </>
@@ -275,12 +326,21 @@ export default function PakkPage() {
                     })}
                   </div>
                   <h2 className="text-2xl font-bold mb-2 text-blue-700">{paq.titulo}</h2>
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Incluye:</span> {renderIncluye(paq.incluye)}</div>
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Descripción:</span> {paq.descripcion}</div>
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Duración:</span> {paq.duracion}</div>
+                                {paq.categoria && (
+                                  <div className="mb-1"><span className="font-semibold text-blue-600">Category:</span> {paq.categoria}</div>
+                                )}
+                                {paq.precio_por_persona !== undefined && (
+                                  <div className="mb-1"><span className="font-semibold text-blue-600">Price per person:</span> {formatUSD(paq.precio_por_persona)}</div>
+                                )}
+                                {paq.max_personas !== undefined && (
+                                  <div className="mb-1"><span className="font-semibold text-blue-600">Max. people:</span> {paq.max_personas}</div>
+                                )}
+                  <div className="mb-1"><span className="font-semibold text-blue-600">Includes:</span> {renderIncluye(paq.incluye)}</div>
+                  <div className="mb-1"><span className="font-semibold text-blue-600">Description:</span> {paq.descripcion}</div>
+                  <div className="mb-1"><span className="font-semibold text-blue-600">Duration:</span> {paq.duracion}</div>
                   <div className="flex gap-2 mt-4 justify-end">
-                    <button onClick={() => handleEditClick(idx)} className="bg-yellow-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition">Editar</button>
-                    <button onClick={() => handleDelete(paq.id)} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-700 transition" disabled={deleting === paq.id}>{deleting === paq.id ? 'Eliminando...' : 'Eliminar'}</button>
+                    <button onClick={() => handleEditClick(idx)} className="bg-yellow-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition">Edit</button>
+                    <button onClick={() => handleDelete(paq.id)} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-700 transition" disabled={deleting === paq.id}>{deleting === paq.id ? 'Deleting...' : 'Delete'}</button>
                   </div>
                 </>
               )}

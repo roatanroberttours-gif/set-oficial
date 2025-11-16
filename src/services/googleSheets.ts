@@ -191,7 +191,7 @@ export const getMockExperiences = (): Experience[] => [
     description: 'Como biólogo marino, quedé impresionado con la biodiversidad y el compromiso con la conservación.',
     image: '/images/aerial-beach-view.jpeg',
     rating: 5,
-    testimonial: 'Roatan East Hidden Gem realmente cuida y respeta el ecosistema. Una empresa responsable.',
+    testimonial: 'Roatan Robert Tours realmente cuida y respeta el ecosistema. Una empresa responsable.',
     author: 'Dr. Ana Rodríguez - México',
   }
 ];

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { GalleryItem } from "../types";
-import { getGallery } from "../services/googleSheets";
+import { useSupabaseSet } from "../hooks/supabaseset";
+
+// We'll read admin.portada_galeria to show as the gallery hero background
 
 const GalleryPage: React.FC = () => {
   const { t } = useLanguage();
@@ -10,22 +12,53 @@ const GalleryPage: React.FC = () => {
   const [filteredItems, setFilteredItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  // lightbox for a single row: muestra portada + imagen1..imagen4
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const client = useSupabaseSet();
+  const [admin, setAdmin] = useState<any | null>(null);
 
   useEffect(() => {
     loadGallery();
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        if (error) throw error;
+        if (mounted) setAdmin(data || null);
+      } catch (err) {
+        console.error('Error loading admin for gallery:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [client]);
+
+  useEffect(() => {
     filterImages();
   }, [galleryItems, selectedCategory]);
 
   const loadGallery = async () => {
+    setLoading(true);
     try {
-      const galleryData = await getGallery();
-      setGalleryItems(galleryData);
+      const { data, error } = await client.from('gallery').select('*').order('id', { ascending: false }).limit(100);
+      if (error) throw error;
+      const mapped: GalleryItem[] = (data || []).map((g: any) => ({
+        id: String(g.id),
+        image: g.portada || g.imagen1 || g.imagen2 || g.imagen3 || g.imagen4 || '',
+        title: g.title || g.titulo || '',
+        description: g.description || g.descripcion || '',
+        category: g.category || 'general',
+        // images array keeps all images of the row for the lightbox
+        images: [g.portada, g.imagen1, g.imagen2, g.imagen3, g.imagen4].filter(Boolean) as string[],
+      }));
+      setGalleryItems(mapped);
     } catch (error) {
-      console.error("Error loading gallery:", error);
+      console.error("Error loading gallery from Supabase:", error);
     } finally {
       setLoading(false);
     }
@@ -42,12 +75,16 @@ const GalleryPage: React.FC = () => {
   };
 
   const openLightbox = (index: number) => {
+    // legacy: keep selected index for whole-grid navigation if needed
     setSelectedImage(index);
     document.body.style.overflow = "hidden";
   };
 
   const closeLightbox = () => {
     setSelectedImage(null);
+    setLightboxOpen(false);
+    setLightboxImages([]);
+    setLightboxIndex(0);
     document.body.style.overflow = "unset";
   };
 
@@ -70,6 +107,18 @@ const GalleryPage: React.FC = () => {
     if (e.key === "ArrowRight") nextImage();
     if (e.key === "ArrowLeft") prevImage();
   };
+
+  // keyboard navigation for row-lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') setLightboxIndex(i => Math.max(0, i - 1));
+      if (e.key === 'ArrowRight') setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightboxOpen, lightboxImages.length]);
 
   const categories = [
     { value: "all", label: "Todas", count: galleryItems.length },
@@ -158,8 +207,8 @@ const GalleryPage: React.FC = () => {
       {/* Hero Section */}
       <section className="relative py-20 text-white overflow-hidden min-h-[90vh] md:min-h-[110vh] flex items-center justify-center">
         <img
-          src="/2.webp"
-          alt="Galería Roatan East Hidden Gem"
+          src={admin?.portada_galeria || '/2.webp'}
+          alt="Roatan Robert Tours Gallery"
           className="absolute inset-0 w-full h-full object-cover object-center z-0"
           style={{ filter: "brightness(0.7)" }}
         />
@@ -173,8 +222,7 @@ const GalleryPage: React.FC = () => {
               {t.gallery.subtitle}
             </p>
             <div className="text-lg">
-              <span className="font-semibold">{galleryItems.length}</span> Fotos
-              Increíbles de Nuestras Aventuras
+              <span className="font-semibold">{galleryItems.length}</span> amazing photos from our adventures
             </div>
           </div>
         </div>
@@ -206,7 +254,7 @@ const GalleryPage: React.FC = () => {
 
           {/* Results Count */}
           <div className="mt-4 text-center text-gray-600">
-            Mostrando {filteredItems.length} de {galleryItems.length} fotos
+            Showing {filteredItems.length} of {galleryItems.length} photos
           </div>
         </div>
       </section>
@@ -218,16 +266,16 @@ const GalleryPage: React.FC = () => {
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📸</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                No se encontraron fotos
+                No photos found
               </h3>
               <p className="text-gray-600 mb-6">
-                No hay fotos en esta categoría
+                There are no photos in this category
               </p>
               <button
                 onClick={() => setSelectedCategory("all")}
                 className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200"
               >
-                Ver Todas las Fotos
+                View All Photos
               </button>
             </div>
           ) : (
@@ -236,7 +284,15 @@ const GalleryPage: React.FC = () => {
                 <div
                   key={item.id}
                   className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer"
-                  onClick={() => openLightbox(index)}
+                  onClick={() => {
+                    // abrir lightbox con las imágenes de la fila
+                    const imgs = (item as any).images || [item.image];
+                    if (!imgs || imgs.length === 0) return;
+                    setLightboxImages(imgs);
+                    setLightboxIndex(0);
+                    setLightboxOpen(true);
+                    document.body.style.overflow = 'hidden';
+                  }}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   {/* Image */}
@@ -299,29 +355,27 @@ const GalleryPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Lightbox */}
-      {selectedImage !== null && (
+      {/* Lightbox para imágenes de la fila */}
+      {lightboxOpen && (
         <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={closeLightbox}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
         >
           {/* Close Button */}
           <button
-            onClick={closeLightbox}
+            onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
             className="absolute top-4 right-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
           >
             <X className="w-6 h-6" />
           </button>
 
           {/* Navigation Buttons */}
-          {filteredItems.length > 1 && (
+          {lightboxImages.length > 1 && (
             <>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  prevImage();
+                  setLightboxIndex(i => Math.max(0, i - 1));
                 }}
                 className="absolute left-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >
@@ -331,7 +385,7 @@ const GalleryPage: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  nextImage();
+                  setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
                 }}
                 className="absolute right-16 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >
@@ -346,27 +400,17 @@ const GalleryPage: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={filteredItems[selectedImage].image}
-              alt={filteredItems[selectedImage].title}
+              src={lightboxImages[lightboxIndex]}
+              alt={`Imagen ${lightboxIndex + 1}`}
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
             />
 
-            {/* Image Info */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-lg">
-              <h3 className="text-white font-semibold text-xl mb-2">
-                {filteredItems[selectedImage].title}
-              </h3>
-              {filteredItems[selectedImage].description && (
-                <p className="text-gray-200">
-                  {filteredItems[selectedImage].description}
-                </p>
-              )}
-            </div>
+            {/* Image Info (no title/desc available per-row here) */}
           </div>
 
           {/* Image Counter */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white">
-            {selectedImage + 1} / {filteredItems.length}
+            {lightboxIndex + 1} / {lightboxImages.length}
           </div>
         </div>
       )}

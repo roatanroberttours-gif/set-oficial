@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Language } from "../types";
+import { useSupabaseSet } from "../hooks/supabaseset";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const location = useLocation();
+  const client = useSupabaseSet();
+  const [admin, setAdmin] = useState<any | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        if (error) throw error;
+        if (mounted) setAdmin(data || null);
+      } catch (err) {
+        console.error('Error loading admin for header:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [client]);
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // Header is always visible and opaque; no scroll detection needed
 
-  const toggleLanguage = () => {
-    setLanguage(language === "es" ? "en" : "es");
-  };
+  
 
   const navItems = [
     { key: "home", href: "/", label: t.nav.home },
@@ -42,12 +48,8 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-transparent"
-      }`}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md shadow-lg`}>
+      <div className="container mx-auto px-6 sm:px-6 lg:px-10">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <Link
@@ -56,26 +58,16 @@ const Header: React.FC = () => {
             onClick={() => setIsMenuOpen(false)}
           >
             <img
-              src="/logo.webp"
-              alt="Roatan East Hidden Gem Logo"
-              className="w-12 h-12 rounded-full shadow-lg border-2 border-white bg-white object-cover group-hover:scale-110 transition-transform duration-200"
+              src={admin?.logo || '/logo.webp'}
+              alt={`${admin?.nombre_web ?? 'Roatan Robert Tours'} Logo`}
+              className="w-19 h-11 rounded-full shadow-lg border-9 border-white bg-white object-cover group-hover:scale-110 transition-transform duration-200"
               style={{ background: "white" }}
             />
             <div className="hidden sm:block">
-              <h1
-                className={`font-bold text-lg ${
-                  isScrolled ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Roatan East
+              <h1 className={`font-bold text-lg text-gray-800`}>
+                {admin?.nombre_web ?? 'Roatan Robert Tours'}
               </h1>
-              <p
-                className={`text-sm ${
-                  isScrolled ? "text-gray-600" : "text-gray-200"
-                }`}
-              >
-                Hidden Gem
-              </p>
+
             </div>
           </Link>
 
@@ -85,45 +77,18 @@ const Header: React.FC = () => {
               <Link
                 key={item.key}
                 to={item.href}
-                className={`font-medium transition-colors duration-200 hover:text-teal-500 ${
-                  isActivePath(item.href)
-                    ? "text-teal-500"
-                    : isScrolled
-                    ? "text-gray-800"
-                    : "text-white"
-                }`}
+                className={`font-medium transition-colors duration-200 hover:text-teal-500 ${isActivePath(item.href) ? "text-teal-500" : "text-gray-800"}`}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          {/* Language Toggle & Mobile Menu Button */}
-          <div className="flex items-center space-x-4">
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-teal-500/20 ${
-                isScrolled ? "text-gray-800" : "text-white"
-              }`}
-              title={
-                language === "es" ? "Switch to English" : "Cambiar a Español"
-              }
-            >
-              <Globe className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {language.toUpperCase()}
-              </span>
-            </button>
-
-            {/* Mobile Menu Button */}
+          {/* Mobile Menu Button */}
+          <div className="flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`md:hidden p-2 rounded-lg transition-colors duration-200 ${
-                isScrolled
-                  ? "text-gray-800 hover:bg-gray-100"
-                  : "text-white hover:bg-white/20"
-              }`}
+              className={`md:hidden p-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-gray-100`}
             >
               {isMenuOpen ? (
                 <X className="w-6 h-6" />

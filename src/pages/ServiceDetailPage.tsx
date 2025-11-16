@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
-import { getTours } from "../services/googleSheets";
+import { useSupabaseSet } from "../hooks/supabaseset";
 import BookingModal from "../components/BookingModal";
 
 const ServiceDetailPage: React.FC = () => {
@@ -27,25 +27,95 @@ const ServiceDetailPage: React.FC = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [admin, setAdmin] = useState<any | null>(null);
+  const clientTop = useSupabaseSet();
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data, error } = await clientTop.from('admin').select('*').maybeSingle();
+        if (error) throw error;
+        if (mounted) setAdmin(data || null);
+      } catch (err) {
+        console.error('Error loading admin in ServiceDetailPage', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [clientTop]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     loadTour();
   }, [id]);
 
+  // Close gallery on ESC
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!galleryOpen) return;
+      if (e.key === 'Escape') {
+        setGalleryOpen(false);
+        return;
+      }
+      if (galleryImages.length === 0) return;
+      if (e.key === 'ArrowLeft') setCurrentImageIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+      if (e.key === 'ArrowRight') setCurrentImageIndex((i) => (i + 1) % galleryImages.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [galleryOpen, galleryImages.length]);
+
   const loadTour = async () => {
     try {
-      const tours = await getTours();
-      const foundTour = tours.find((t) => t.id === id);
-      if (foundTour) {
-        setTour(foundTour);
+      const client = useSupabaseSet();
+      // Intentar buscar por id numérico, sino por titulo (slug)
+      let paqQuery: any;
+      const numericId = Number(id);
+      if (!Number.isNaN(numericId)) {
+        paqQuery = await client.from('paquetes').select('*').eq('id', numericId).maybeSingle();
       } else {
-        // Si no se encuentra el tour, redirigir a la página de servicios
-        navigate("/services");
+        paqQuery = await client.from('paquetes').select('*').eq('titulo', id).maybeSingle();
       }
+      if (paqQuery.error) throw paqQuery.error;
+      const paq = paqQuery.data;
+      if (!paq) {
+        navigate('/services');
+        return;
+      }
+
+      // Construir array de imágenes reales (filtrar vacíos)
+      const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]).filter(Boolean) as string[];
+      setGalleryImages(images);
+
+      let included: string[] | undefined = undefined;
+      try {
+        if (paq.incluye) {
+          const parsed = JSON.parse(paq.incluye);
+          if (Array.isArray(parsed)) included = parsed.map(String);
+        }
+      } catch (e) {
+        included = undefined;
+      }
+
+      const mappedTour: Tour = {
+        id: String(paq.id),
+        name: paq.titulo || '',
+        description: paq.descripcion || '',
+        personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
+        price: paq.precio_por_persona ?? (paq.price ?? 0),
+        image: images[0] || '',
+        duration: paq.duracion || '',
+        included,
+        category: paq.categoria || 'adventure',
+      } as Tour;
+
+      setTour(mappedTour);
     } catch (error) {
-      console.error("Error loading tour:", error);
-      navigate("/services");
+      console.error('Error loading paquete from Supabase:', error);
+      navigate('/services');
     } finally {
       setLoading(false);
     }
@@ -101,6 +171,16 @@ const ServiceDetailPage: React.FC = () => {
         return "from-teal-500 to-blue-500";
     }
   };
+
+  // Formatear USD
+  function formatUSD(value?: number) {
+    if (value === undefined || value === null) return '';
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    } catch {
+      return `$${value}`;
+    }
+  }
 
   const tabs = [
     { id: "description", label: "Descripción" },
@@ -202,11 +282,13 @@ const ServiceDetailPage: React.FC = () => {
           <div className="space-y-6">
             {/* Main Image */}
             <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              <img
-                src={tour.image}
-                alt={tour.name}
-                className="w-full h-96 object-cover"
-              />
+              <button onClick={() => { if (galleryImages.length) { setCurrentImageIndex(0); setGalleryOpen(true); } }} className="w-full block text-left">
+                <img
+                  src={tour.image}
+                  alt={tour.name}
+                  className="w-full h-96 object-cover"
+                />
+              </button>
               <div className="absolute top-4 left-4">
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-white text-sm font-medium bg-gradient-to-r ${getCategoryColor(
@@ -226,12 +308,53 @@ const ServiceDetailPage: React.FC = () => {
                 </span>
               </div>
               <div className="absolute top-4 right-4">
-                <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                  <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                  <span className="text-sm font-medium">4.9</span>
-                </div>
+              
               </div>
             </div>
+
+            {/* Gallery Lightbox */}
+            {galleryOpen && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+                onClick={(e) => { if (e.target === e.currentTarget) setGalleryOpen(false); }}
+              >
+                <div className="relative max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setGalleryOpen(false)}
+                    className="absolute top-4 right-4 text-white text-xl bg-black/30 rounded-full p-2"
+                    aria-label="Cerrar galería"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="bg-black rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-center relative">
+                      <button
+                        onClick={() => setCurrentImageIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length)}
+                        className="absolute left-2 text-white/90 bg-black/30 rounded-full p-2"
+                        aria-label="Anterior"
+                      >‹</button>
+
+                      <img src={galleryImages[currentImageIndex]} alt={`Imagen ${currentImageIndex + 1}`} className="max-h-[70vh] mx-auto object-contain" />
+
+                      <button
+                        onClick={() => setCurrentImageIndex((i) => (i + 1) % galleryImages.length)}
+                        className="absolute right-2 text-white/90 bg-black/30 rounded-full p-2"
+                        aria-label="Siguiente"
+                      >›</button>
+                    </div>
+
+                    <div className="p-3 bg-gray-900/80 flex gap-2 overflow-x-auto">
+                      {galleryImages.map((img, idx) => (
+                        <button key={idx} onClick={() => setCurrentImageIndex(idx)} className={`flex-shrink-0 border ${idx === currentImageIndex ? 'border-white' : 'border-transparent'} rounded`}>
+                          <img src={img} alt={`thumb-${idx}`} className="w-24 h-16 object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Tour Info Tabs */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -355,13 +478,12 @@ const ServiceDetailPage: React.FC = () => {
                         <MapPin className="w-12 h-12 mx-auto mb-2" />
                         <p>Mapa interactivo</p>
                         <p className="text-sm">
-                          Punto de encuentro: Roatán East End
+                          Meeting point: Roatán East End
                         </p>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      El transporte desde su hotel está incluido. Nos pondremos
-                      en contacto para coordinar el punto de recogida.
+                      Transport from your hotel is included. We will contact you to coordinate the pickup point.
                     </p>
                   </div>
                 )}
@@ -377,14 +499,10 @@ const ServiceDetailPage: React.FC = () => {
                 {tour.name}
               </h1>
               <div className="flex items-center space-x-4 mb-6">
-                <div className="flex items-center">
-                  <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                  <span className="font-medium">4.9</span>
-                  <span className="text-gray-500 ml-1">(127 reseñas)</span>
-                </div>
+               
                 <div className="flex items-center text-gray-500">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span>Roatán Este</span>
+                  <span>Islas de la Bahía</span>
                 </div>
               </div>
             </div>
@@ -392,15 +510,15 @@ const ServiceDetailPage: React.FC = () => {
             {/* Pricing Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
               <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-gray-800 mb-2">
-                  ${tour.price}
+                  <div className="text-4xl font-bold text-gray-800 mb-2">
+                  {formatUSD(tour.price)}
                   <span className="text-lg font-normal text-gray-500">
                     {" "}
-                    / persona
+                    / person
                   </span>
                 </div>
                 <p className="text-gray-600">
-                  Precio final, sin cargos adicionales
+                  Final price, no additional fees
                 </p>
               </div>
 
@@ -409,19 +527,19 @@ const ServiceDetailPage: React.FC = () => {
                 className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg mb-4"
               >
                 <Calendar className="w-5 h-5 inline mr-2" />
-                Reservar Ahora
+                Book Now
               </button>
 
               <div className="flex space-x-3">
+                  <a
+                    href={admin?.celular ? `tel:${admin.celular.replace(/\s+/g, '')}` : 'tel:+50432267504'}
+                    className="flex-1 flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Call
+                  </a>
                 <a
-                  href="tel:+50432267504"
-                  className="flex-1 flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Llamar
-                </a>
-                <a
-                  href="https://wa.me/50432267504"
+                  href={admin?.celular ? `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}` : 'https://wa.me/50432267504'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
@@ -469,11 +587,11 @@ const ServiceDetailPage: React.FC = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 mr-2 text-teal-500" />
-                  <span>+504 3226-7504</span>
+                  <span>{admin?.celular ?? '+504 3226-7504'}</span>
                 </div>
                 <div className="flex items-center">
                   <MessageCircle className="w-4 h-4 mr-2 text-teal-500" />
-                  <span>WhatsApp disponible 24/7</span>
+                  <span>{admin?.celular ? 'WhatsApp disponible 24/7' : 'WhatsApp disponible'}</span>
                 </div>
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-2 text-teal-500" />

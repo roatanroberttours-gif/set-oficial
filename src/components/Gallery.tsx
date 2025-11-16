@@ -3,56 +3,61 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { GalleryItem } from '../types';
-import { getGallery } from '../services/googleSheets';
+import { useSupabaseSet } from '../hooks/supabaseset';
 
 const Gallery: React.FC = () => {
   const { t } = useLanguage();
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const client = useSupabaseSet();
 
   useEffect(() => {
     loadGallery();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGallery = async () => {
+    setLoading(true);
     try {
-      const galleryData = await getGallery();
-      setGalleryItems(galleryData.slice(0, 6)); // Mostrar solo 6 en home
-    } catch (error) {
-      console.error('Error loading gallery:', error);
+      const { data, error } = await client.from('gallery').select('*').order('id', { ascending: false }).limit(6);
+      if (error) throw error;
+      const mapped: GalleryItem[] = (data || []).map((g: any) => ({
+        id: String(g.id),
+        image: g.portada || g.imagen1 || g.imagen2 || g.imagen3 || g.imagen4 || '',
+        title: g.title || g.titulo || '',
+        description: g.description || g.descripcion || '',
+        category: g.category || 'general',
+        images: [g.portada, g.imagen1, g.imagen2, g.imagen3, g.imagen4].filter(Boolean) as string[],
+      }));
+      setGalleryItems(mapped.slice(0, 6));
+    } catch (err) {
+      console.error('Error loading gallery from Supabase:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const openLightbox = (index: number) => {
-    setSelectedImage(index);
-    document.body.style.overflow = 'hidden';
-  };
-
   const closeLightbox = () => {
-    setSelectedImage(null);
+    setLightboxOpen(false);
+    setLightboxImages([]);
+    setLightboxIndex(0);
     document.body.style.overflow = 'unset';
   };
 
-  const nextImage = () => {
-    if (selectedImage !== null) {
-      setSelectedImage((selectedImage + 1) % galleryItems.length);
-    }
-  };
-
-  const prevImage = () => {
-    if (selectedImage !== null) {
-      setSelectedImage((selectedImage - 1 + galleryItems.length) % galleryItems.length);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowRight') nextImage();
-    if (e.key === 'ArrowLeft') prevImage();
-  };
+  // keyboard navigation for row-lightbox
+  React.useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') setLightboxIndex(i => Math.max(0, i - 1));
+      if (e.key === 'ArrowRight') setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightboxOpen, lightboxImages.length]);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -133,7 +138,14 @@ const Gallery: React.FC = () => {
             <div
               key={item.id}
               className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer"
-              onClick={() => openLightbox(index)}
+              onClick={() => {
+                const imgs = (item as any).images || [item.image];
+                if (!imgs || imgs.length === 0) return;
+                setLightboxImages(imgs);
+                setLightboxIndex(0);
+                setLightboxOpen(true);
+                document.body.style.overflow = 'hidden';
+              }}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Image */}
@@ -190,29 +202,27 @@ const Gallery: React.FC = () => {
         </div>
       </div>
 
-      {/* Lightbox */}
-      {selectedImage !== null && (
+      {/* Lightbox para imágenes de la fila */}
+      {lightboxOpen && (
         <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={closeLightbox}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
         >
           {/* Close Button */}
           <button
-            onClick={closeLightbox}
+            onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
             className="absolute top-4 right-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
           >
             <X className="w-6 h-6" />
           </button>
 
           {/* Navigation Buttons */}
-          {galleryItems.length > 1 && (
+          {lightboxImages.length > 1 && (
             <>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  prevImage();
+                  setLightboxIndex(i => Math.max(0, i - 1));
                 }}
                 className="absolute left-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >
@@ -222,7 +232,7 @@ const Gallery: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  nextImage();
+                  setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
                 }}
                 className="absolute right-16 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >
@@ -237,27 +247,15 @@ const Gallery: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={galleryItems[selectedImage].image}
-              alt={galleryItems[selectedImage].title}
+              src={lightboxImages[lightboxIndex]}
+              alt={`Imagen ${lightboxIndex + 1}`}
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
             />
-            
-            {/* Image Info */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-lg">
-              <h3 className="text-white font-semibold text-xl mb-2">
-                {galleryItems[selectedImage].title}
-              </h3>
-              {galleryItems[selectedImage].description && (
-                <p className="text-gray-200">
-                  {galleryItems[selectedImage].description}
-                </p>
-              )}
-            </div>
           </div>
 
           {/* Image Counter */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white">
-            {selectedImage + 1} / {galleryItems.length}
+            {lightboxIndex + 1} / {lightboxImages.length}
           </div>
         </div>
       )}
