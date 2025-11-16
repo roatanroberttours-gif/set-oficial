@@ -37,29 +37,37 @@ const FloatingSocial: React.FC = () => {
     });
   };
 
-  const socialButtons = [
-    {
+  const socialButtons: Array<any> = [];
+
+  if (admin?.celular) {
+    socialButtons.push({
       name: 'WhatsApp',
-      href: admin?.celular ? `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}` : 'https://wa.me/50432267504?text=Hola!%20Me%20interesa%20información%20sobre%20sus%20tours',
+      href: `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}`,
       icon: <MessageCircle className="w-6 h-6" />,
       bgColor: 'bg-green-500 hover:bg-green-600',
       pulse: true,
-    },
-    {
+    });
+  }
+
+  if (admin?.instagram) {
+    socialButtons.push({
       name: 'Instagram',
-      href: admin?.instagram ? (admin.instagram.startsWith('http') ? admin.instagram : `https://${admin.instagram}`) : 'https://instagram.com/roataneasthiddengem',
+      href: admin.instagram.startsWith('http') ? admin.instagram : `https://${admin.instagram}`,
       icon: <Instagram className="w-6 h-6" />,
       bgColor: 'bg-pink-500 hover:bg-pink-600',
       pulse: false,
-    },
-    {
+    });
+  }
+
+  if (admin?.facebook) {
+    socialButtons.push({
       name: 'Facebook',
-      href: admin?.facebook ? (admin.facebook.startsWith('http') ? admin.facebook : `https://${admin.facebook}`) : 'https://facebook.com/roataneasthiddengem',
+      href: admin.facebook.startsWith('http') ? admin.facebook : `https://${admin.facebook}`,
       icon: <Facebook className="w-6 h-6" />,
       bgColor: 'bg-blue-500 hover:bg-blue-600',
       pulse: false,
-    },
-  ];
+    });
+  }
 
   return (
     <div className="fixed right-4 sm:right-6 bottom-4 sm:bottom-6 z-40 flex flex-col items-end space-y-3">
