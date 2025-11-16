@@ -6,28 +6,28 @@
   :root {
     --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-foreground: 220 8% 20%;
+    /* Primary: rose-ish */
+    --sidebar-primary: 354 75% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    /* Accent / Secondary: indigo-ish */
+    --sidebar-accent: 252 65% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%
+    --sidebar-ring: 354 75% 45%;
   }
 
   .dark {
     --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-foreground: 220 4% 95%;
+    --sidebar-primary: 354 65% 30%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent: 252 55% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%
+    --sidebar-ring: 354 65% 40%;
   }
 }
-
-
 
 img {
   object-position: top;
@@ -35,7 +35,8 @@ img {
 
 /* Custom Animations */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -64,7 +65,8 @@ img {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -128,10 +130,8 @@ html {
   background: #475569;
 }
 
-/* Focus Styles */
-.focus-ring {
-  @apply focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:outline-none;
-}
+/* Focus Styles: prefer applying focus classes in JSX; keep helper for non-Tailwind usages */
+/* Prefer applying focus classes directly in JSX: e.g. className="focus:ring-2 focus:ring-offset-2 focus:outline-none focus:ring-rose-500" */
 
 /* Button Hover Effects */
 .btn-hover {
@@ -140,7 +140,8 @@ html {
 
 .btn-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Glass Effect */
