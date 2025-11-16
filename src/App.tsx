@@ -38,7 +38,7 @@ function App() {
                 <Route path="admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="admin/settings" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
                 <Route path="admingallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
-                <Route path="paquetes" element={<ProtectedRoute><PaquetesPage /></ProtectedRoute>} />
+                <Route path="paquetes" element={<ProtectedRoute><PakkPage /></ProtectedRoute>} />
               </Route>
             </Routes>
           </div>
