@@ -7,6 +7,9 @@ import ServicesPage from './pages/ServicesPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
 import GalleryPage from './pages/GalleryPage';
 import ContactPage from './pages/ContactPage';
+import AdminPage from './pages/AdminPage';
+import PaquetesPage from './pages/PaquetesPage';
+import PakkPage from './pages/PakkPage';
 import './App.css';
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
               <Route path="service/:id" element={<ServiceDetailPage />} />
               <Route path="gallery" element={<GalleryPage />} />
               <Route path="contact" element={<ContactPage />} />
+              <Route path="admin" element={<AdminPage />} />
+              <Route path="paquetes" element={<PaquetesPage />} />
+              <Route path="pakk" element={<PakkPage />} />
             </Route>
           </Routes>
         </div>
