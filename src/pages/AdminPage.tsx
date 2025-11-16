@@ -151,12 +151,14 @@ export default function AdminPage() {
               setUpdating(false);
               return;
             }
-            const { data: urlData, error: publicErr } = client.storage.from('principal').getPublicUrl(filePath);
-            if (publicErr) {
-              console.warn('getPublicUrl error:', publicErr);
-              setLastErrorDetails(JSON.stringify(publicErr));
+            const urlResult = client.storage.from('principal').getPublicUrl(filePath);
+            // getPublicUrl returns a synchronous object like { data: { publicUrl } }
+            if (urlResult && (urlResult as any).data && (urlResult as any).data.publicUrl) {
+              (updateData as any)[slotName] = (urlResult as any).data.publicUrl as string;
+            } else {
+              console.warn('getPublicUrl returned unexpected shape:', urlResult);
+              setLastErrorDetails(JSON.stringify(urlResult));
             }
-            (updateData as any)[slotName] = urlData.publicUrl as string;
           } catch (e) {
             console.error('Exception uploading file:', e);
             setError('Error subiendo imagen (exception)');
