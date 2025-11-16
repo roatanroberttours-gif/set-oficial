@@ -29,26 +29,26 @@ const Contact: React.FC = () => {
       title: t.contact.phone,
       value: admin?.celular ?? '+504 3226-7504',
       href: admin?.celular ? `tel:${admin.celular.replace(/\s+/g, '')}` : 'tel:+50432267504',
-      description: 'Llámanos directamente',
+      description: 'Call us directly',
     },
     {
       icon: <MessageCircle className="w-6 h-6" />,
       title: t.contact.whatsapp,
       value: admin?.celular ?? '+504 3226-7504',
       href: admin?.celular ? `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}` : 'https://wa.me/50432267504?text=Hola!%20Me%20interesa%20información%20sobre%20sus%20tours',
-      description: 'Respuesta inmediata',
+      description: 'Immediate response',
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: t.contact.email,
       value: admin?.correo ?? 'rteastendexp@gmail.com',
       href: admin?.correo ? `mailto:${admin.correo}` : 'mailto:rteastendexp@gmail.com',
-      description: 'Envíanos un correo',
+      description: 'Send us an email',
     },
     {
       icon: <MapPin className="w-6 h-6" />,
-      title: 'Ubicación',
-      value: admin?.direccion ?? 'Roatán Este, Honduras',
+      title: 'Location',
+      value: admin?.direccion ?? 'Roatán East, Honduras',
       href: 'https://maps.google.com/?q=Roatan+East+End+Honduras',
       description: 'Bay Islands, Honduras',
     },
@@ -80,14 +80,14 @@ const Contact: React.FC = () => {
   ];
 
   const businessHours = [
-    { day: 'Lunes - Viernes', hours: '8:00 AM - 6:00 PM' },
-    { day: 'Sábados', hours: '8:00 AM - 5:00 PM' },
-    { day: 'Domingos', hours: '9:00 AM - 4:00 PM' },
+    { day: 'Mon - Fri', hours: '8:00 AM - 6:00 PM' },
+    { day: 'Saturday', hours: '8:00 AM - 5:00 PM' },
+    { day: 'Sunday', hours: '9:00 AM - 4:00 PM' },
   ];
 
   const openWhatsApp = () => {
     const num = admin?.celular ? admin.celular.replace(/[^0-9+]/g, '') : '50432267504';
-    const url = `https://wa.me/${num}?text=${encodeURIComponent('Hola! Me interesa información sobre sus tours')}`;
+    const url = `https://wa.me/${num}?text=${encodeURIComponent('Hello! I am interested in information about your tours')}`;
     window.open(url, '_blank');
   };
 
@@ -140,7 +140,7 @@ const Contact: React.FC = () => {
             <div className="bg-white p-6 rounded-2xl shadow-lg">
               <h3 className="flex items-center font-semibold text-gray-800 mb-4">
                 <Clock className="w-5 h-5 mr-2 text-teal-500" />
-                Horarios de Atención
+                Business Hours
               </h3>
               <div className="space-y-2">
                 {businessHours.map((schedule, index) => (
@@ -179,16 +179,16 @@ const Contact: React.FC = () => {
                 {admin?.logo && (
                   <img src={admin.logo} alt={admin.nombre_web || 'Logo'} className="w-88 h-88 object-contain rounded-md" />
                 )}
-                <h3 className="text-2xl font-bold text-gray-800">Contáctanos</h3>
-                <p className="text-gray-600">Estamos listos para ayudarte. Envía un mensaje por WhatsApp, llámanos o escríbenos un correo.</p>
+                <h3 className="text-2xl font-bold text-gray-800">Contact Us</h3>
+                <p className="text-gray-600">We are ready to help. Send us a WhatsApp message, call, or email.</p>
 
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button onClick={openWhatsApp} className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold">WhatsApp</button>
                   <button onClick={openMail} className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold">Email</button>
-                  <a href={admin?.celular ? `tel:${admin.celular.replace(/\s+/g, '')}` : 'tel:+50432267504'} className="px-6 py-3 bg-gray-100 rounded-lg text-gray-800 flex items-center justify-center">Llamar</a>
+                  <a href={admin?.celular ? `tel:${admin.celular.replace(/\s+/g, '')}` : 'tel:+50432267504'} className="px-6 py-3 bg-gray-100 rounded-lg text-gray-800 flex items-center justify-center">Call</a>
                 </div>
 
-                <a href={admin?.direccion ? `https://maps.google.com/?q=${encodeURIComponent(admin.direccion)}` : 'https://maps.google.com/?q=Roatan+East+End+Honduras'} target="_blank" rel="noreferrer" className="text-sm text-teal-600 underline mt-3">Ver ubicación en Google Maps</a>
+                <a href={admin?.direccion ? `https://maps.google.com/?q=${encodeURIComponent(admin.direccion)}` : 'https://maps.google.com/?q=Roatan+East+End+Honduras'} target="_blank" rel="noreferrer" className="text-sm text-teal-600 underline mt-3">View location on Google Maps</a>
               </div>
             </div>
           </div>
