@@ -2,30 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Play, Calendar, Users, Star } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import BookingModal from "./BookingModal";
-import { useSupabaseSet } from "../hooks/supabaseset";
-
-// Hero now reads admin.portada from Supabase when available
 
 const Hero: React.FC = () => {
   const { t } = useLanguage();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const client = useSupabaseSet();
-  const [admin, setAdmin] = useState<any | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data, error } = await client.from('admin').select('*').maybeSingle();
-        if (error) throw error;
-        if (mounted) setAdmin(data || null);
-      } catch (err) {
-        console.error('Error loading admin for hero:', err);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [client]);
 
   const stats = [
     {

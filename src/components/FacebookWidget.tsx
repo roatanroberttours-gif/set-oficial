@@ -13,13 +13,13 @@ interface FacebookWidgetProps {
 }
 
 const FacebookWidget = ({
-  profileImage = '/logo.webp',
+  profileImage = '/images/logo.webp',
   name = 'Roatan Robert Tours',
   followers = '12.3k',
   likes = '8.4k',
   info = 'Tours, snorkeling, and island adventures in Roatán. Contact us for private tours and group discounts.',
   link = 'https://www.facebook.com/share/17UcBueTar/',
-  images = [],
+  images = ['/images/hero.jpeg'],
   autoplayMs = 4000,
 }: FacebookWidgetProps) => {
   const [index, setIndex] = useState(0);
