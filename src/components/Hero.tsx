@@ -47,13 +47,13 @@ const Hero: React.FC = () => {
 
   return (
     <section
-  className="relative w-full flex items-center justify-center overflow-hidden pt-40 md:pt-56"
-  style={{ height: "100vh" }}
->
+      className="relative w-full flex items-center justify-center overflow-hidden pt-40 md:pt-56"
+      style={{ height: "100vh" }}
+    >
   {/* Background Image with Overlay */}
   <div className="absolute inset-0 z-0">
     <img
-      src={admin?.portada || '/1.webp'}
+      src={'/images/hero.jpeg'}
       alt="Roatan Robert Tours"
       className="w-full h-full object-cover object-center"
       loading="lazy"
