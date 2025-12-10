@@ -1,6 +1,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, X, Save, Upload, Image as ImageIcon, DollarSign, Clock, Users, Tag, AlertCircle, CheckCircle } from 'lucide-react';
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 export type Pakk = {
@@ -28,95 +28,11 @@ export default function PakkPage() {
   const client = useSupabaseSet();
   const [pakk, setPakk] = useState<Pakk[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [editPakk, setEditPakk] = useState<Pakk | null>(null);
-  const [editImages, setEditImages] = useState<(File | null)[]>(Array(10).fill(null));
-  const [editError, setEditError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<number | null>(null);
-    const handleDelete = async (id?: number) => {
-      if (!id) return;
-      const confirmDelete = window.confirm("Are you sure you want to delete this package? This action cannot be undone.");
-      if (!confirmDelete) return;
-      setDeleting(id);
-      const { error } = await client.from("paquetes").delete().eq("id", id);
-      if (!error) {
-        setPakk((prev) => prev.filter((p) => p.id !== id));
-      }
-      setDeleting(null);
-    };
-
-    const handleEditClick = (idx: number) => {
-      setEditIndex(idx);
-      setEditPakk({ ...pakk[idx] });
-      setEditImages(Array(10).fill(null));
-      setEditError(null);
-    };
-
-    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (!editPakk) return;
-      const { name, value } = e.target;
-      setEditPakk({ ...editPakk, [name]: value });
-    };
-
-    const handleEditImageChange = (idx: number, e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-      setEditImages((prev) => {
-        const arr = [...prev];
-        arr[idx] = file;
-        return arr;
-      });
-    };
-
-    const handleEditSave = async () => {
-      if (editIndex === null || !editPakk || !editPakk.id) return;
-      setAdding(true);
-      setEditError(null);
-      let imageUrls: string[] = [];
-      for (let i = 0; i < editImages.length; i++) {
-        if (editImages[i]) {
-          const file = editImages[i]!;
-          const filePath = `pakk/${Date.now()}_${i}_${file.name}`;
-          const { error: uploadError } = await client.storage.from('paquetes').upload(filePath, file, { upsert: true });
-          if (uploadError) {
-            setEditError('Error subiendo imagen: ' + uploadError.message);
-            setAdding(false);
-            return;
-          }
-          const { data: urlData } = client.storage.from('paquetes').getPublicUrl(filePath);
-          imageUrls[i] = urlData.publicUrl;
-        } else {
-          imageUrls[i] = editPakk[`imagen${i+1}` as keyof Pakk] as string || '';
-        }
-      }
-      const paqueteToUpdate: any = { ...editPakk };
-      for (let i = 0; i < 10; i++) {
-        paqueteToUpdate[`imagen${i+1}`] = imageUrls[i] || '';
-      }
-      const { error, data } = await client.from("paquetes").update(paqueteToUpdate).eq("id", editPakk.id).select();
-      if (error) {
-        setEditError(error.message);
-      } else if (data && data.length > 0) {
-        const newArr = [...pakk];
-        newArr[editIndex] = data[0];
-        setPakk(newArr);
-        setEditIndex(null);
-        setEditPakk(null);
-        setEditImages(Array(10).fill(null));
-      }
-      setAdding(false);
-    };
-
-    const handleEditCancel = () => {
-      setEditIndex(null);
-      setEditPakk(null);
-      setEditImages(Array(10).fill(null));
-      setEditError(null);
-    };
-  const [newPakk, setNewPakk] = useState<Pakk>({
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentPakk, setCurrentPakk] = useState<Pakk>({
     titulo: '',
-    incluye: '', // texto plano, se convertirá a JSON al guardar
+    incluye: '',
     descripcion: '',
     duracion: '',
     categoria: '',
@@ -124,238 +40,575 @@ export default function PakkPage() {
     max_personas: undefined,
   });
   const [images, setImages] = useState<(File | null)[]>(Array(10).fill(null));
-  const [addError, setAddError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const { data, error } = await client.from("paquetes").select("*");
-      if (error) {
-        setError(error.message);
-      } else {
-        setPakk(data || []);
-      }
-      setLoading(false);
-    }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadPakk();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewPakk((prev) => ({ ...prev, [name]: value }));
+  const loadPakk = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await client.from("paquetes").select("*").order('id', { ascending: false });
+      if (error) throw error;
+      setPakk(data || []);
+    } catch (err: any) {
+      console.error('Error loading packages:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Procesar el texto de incluye en puntos (cada palabra/frase separada por dos espacios)
-  function getIncluyeArray(str: string) {
-    if (!str) return [];
-    return str.split(/  +/).map(s => s.trim()).filter(Boolean);
-  }
+  const getIncluyeArray = (str: string) => {
+    return str.split(/\s{2,}/).map(s => s.trim()).filter(Boolean);
+  };
 
-  // Helper para mostrar el campo incluye como lista
-  function renderIncluye(incluye: string) {
-    try {
-      const arr = JSON.parse(incluye);
-      if (Array.isArray(arr)) {
-        return (
-          <ul className="list-disc pl-5 mb-1">
-            {arr.map((item, i) => (
-              <li key={i}>{typeof item === 'object' ? JSON.stringify(item) : String(item)}</li>
-            ))}
-          </ul>
-        );
-      }
-    } catch {
-      // Si no es JSON válido, mostrar como texto
-      return <span>{incluye}</span>;
-    }
-    return <span>{incluye}</span>;
-  }
+  const openCreateModal = () => {
+    setEditMode(false);
+    setCurrentPakk({
+      titulo: '',
+      incluye: '',
+      descripcion: '',
+      duracion: '',
+      categoria: '',
+      precio_por_persona: undefined,
+      max_personas: undefined,
+    });
+    setImages(Array(10).fill(null));
+    setModalOpen(true);
+    setError(null);
+    setSuccess(null);
+  };
 
-  // Formatear número a USD
-  function formatUSD(value?: number) {
-    if (value === undefined || value === null) return '';
-    try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-    } catch {
-      return `$${value}`;
-    }
-  }
+  const openEditModal = (paq: Pakk) => {
+    setEditMode(true);
+    setCurrentPakk({ ...paq });
+    setImages(Array(10).fill(null));
+    setModalOpen(true);
+    setError(null);
+    setSuccess(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setCurrentPakk({
+      titulo: '',
+      incluye: '',
+      descripcion: '',
+      duracion: '',
+      categoria: '',
+    });
+    setImages(Array(10).fill(null));
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setCurrentPakk(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleImageChange = (idx: number, e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-    setImages((prev) => {
+    const file = e.target.files?.[0] || null;
+    setImages(prev => {
       const arr = [...prev];
       arr[idx] = file;
       return arr;
     });
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAdding(true);
-    setAddError(null);
-    let imageUrls: string[] = [];
-    // Subir imágenes al bucket 'paquetes'
-    for (let i = 0; i < images.length; i++) {
-      if (images[i]) {
-        const file = images[i]!;
-        const filePath = `pakk/${Date.now()}_${i}_${file.name}`;
-        const { error: uploadError } = await client.storage.from('paquetes').upload(filePath, file, { upsert: true });
-        if (uploadError) {
-          setAddError('Error subiendo imagen: ' + uploadError.message);
-          setAdding(false);
-          return;
+  const handleSave = async () => {
+    if (!currentPakk.titulo.trim()) {
+      setError('Title is required');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const imageUrls: string[] = [];
+      
+      // Upload images
+      for (let i = 0; i < images.length; i++) {
+        if (images[i]) {
+          const file = images[i]!;
+          const filePath = `pakk/${Date.now()}_${i}_${file.name}`;
+          const { error: uploadError } = await client.storage.from('paquetes').upload(filePath, file, { upsert: true });
+          if (uploadError) throw new Error('Error uploading image: ' + uploadError.message);
+          
+          const { data: urlData } = client.storage.from('paquetes').getPublicUrl(filePath);
+          imageUrls[i] = urlData.publicUrl;
+        } else if (editMode) {
+          imageUrls[i] = currentPakk[`imagen${i+1}` as keyof Pakk] as string || '';
         }
-        const { data: urlData } = client.storage.from('paquetes').getPublicUrl(filePath);
-        imageUrls[i] = urlData.publicUrl;
-      } else {
-        imageUrls[i] = '';
       }
+
+      const paqueteData: any = {
+        titulo: currentPakk.titulo,
+        descripcion: currentPakk.descripcion,
+        duracion: currentPakk.duracion,
+        categoria: currentPakk.categoria || null,
+        incluye: JSON.stringify(getIncluyeArray(currentPakk.incluye)),
+        precio_por_persona: currentPakk.precio_por_persona || null,
+        max_personas: currentPakk.max_personas || null,
+      };
+
+      for (let i = 0; i < 10; i++) {
+        paqueteData[`imagen${i+1}`] = imageUrls[i] || '';
+      }
+
+      if (editMode && currentPakk.id) {
+        const { data, error } = await client.from("paquetes").update(paqueteData).eq("id", currentPakk.id).select();
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setPakk(prev => prev.map(p => p.id === currentPakk.id ? data[0] : p));
+        }
+        setSuccess('Package updated successfully!');
+      } else {
+        const { data, error } = await client.from("paquetes").insert([paqueteData]).select();
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setPakk(prev => [data[0], ...prev]);
+        }
+        setSuccess('Package created successfully!');
+      }
+
+      setTimeout(() => {
+        closeModal();
+      }, 1500);
+    } catch (err: any) {
+      console.error('Save error:', err);
+      setError(err.message || 'An error occurred');
+    } finally {
+      setSaving(false);
     }
-    // Construir objeto para insertar
-    const paqueteToInsert: any = { ...newPakk };
-    // Guardar incluye como JSON string
-    paqueteToInsert.incluye = JSON.stringify(getIncluyeArray(newPakk.incluye));
-    paqueteToInsert.categoria = newPakk.categoria || null;
-    for (let i = 0; i < 10; i++) {
-      paqueteToInsert[`imagen${i+1}`] = imageUrls[i] || '';
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this package? This action cannot be undone.')) return;
+
+    try {
+      const { error } = await client.from("paquetes").delete().eq("id", id);
+      if (error) throw error;
+      setPakk(prev => prev.filter(p => p.id !== id));
+      setSuccess('Package deleted successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Error deleting package');
+      setTimeout(() => setError(null), 3000);
     }
-    const { error, data } = await client.from("paquetes").insert([paqueteToInsert]).select();
-    if (error) {
-      setAddError(error.message);
-    } else if (data && data.length > 0) {
-      setPakk((prev) => [data[0], ...prev]);
-      setNewPakk({ titulo: '', incluye: '', descripcion: '', duracion: '', categoria: '' });
-      setImages(Array(10).fill(null));
+  };
+
+  const getCategoryLabel = (cat?: string) => {
+    switch (cat) {
+      case 'water-adventure': return 'Water Adventure';
+      case 'nature': return 'Nature';
+      case 'romantic': return 'Romantic';
+      default: return 'Adventure';
     }
-    setAdding(false);
+  };
+
+  const getCategoryColor = (cat?: string) => {
+    switch (cat) {
+      case 'water-adventure': return 'bg-blue-100 text-blue-700';
+      case 'nature': return 'bg-green-100 text-green-700';
+      case 'romantic': return 'bg-pink-100 text-pink-700';
+      default: return 'bg-teal-100 text-teal-700';
+    }
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen">
-      <div className="flex items-center gap-4 mb-6 max-w-6xl mx-auto px-2">
-        <Link to="/admin" className="p-2 rounded-full bg-white shadow hover:bg-gray-100">
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </Link>
-        <h1 className="text-4xl font-extrabold mb-0 text-blue-800 drop-shadow">Pakk</h1>
-      </div>
-      
-      <form onSubmit={handleAdd} className="mb-10 bg-white/90 p-6 rounded-xl shadow-lg max-w-2xl mx-auto border border-blue-100">
-        <h2 className="text-2xl font-bold mb-4 text-blue-700">Add New Package</h2>
-        <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="number" name="precio_por_persona" value={newPakk.precio_por_persona ?? ''} onChange={e => setNewPakk(prev => ({ ...prev, precio_por_persona: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Precio por persona (USD)" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" min="0" step="0.01" />
-                    <input type="number" name="max_personas" value={newPakk.max_personas ?? ''} onChange={e => setNewPakk(prev => ({ ...prev, max_personas: e.target.value ? Number(e.target.value) : undefined }))} placeholder="Máx. de personas" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" min="1" step="1" />
-          <input name="titulo" value={newPakk.titulo} onChange={handleChange} placeholder="Título" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" required />
-          <input name="categoria" value={newPakk.categoria ?? ''} onChange={handleChange} placeholder="Category" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" />
-          <div>
-            <textarea name="incluye" value={newPakk.incluye} onChange={handleChange} placeholder='Write each item separated by two spaces' className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300 min-h-[60px]" />
-            <div className="mt-2">
-              {getIncluyeArray(newPakk.incluye).length > 0 && (
-                <ul className="list-disc pl-5 text-sm text-blue-700">
-                  {getIncluyeArray(newPakk.incluye).map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 pt-20 px-4 pb-12">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link to="/admin" className="p-2 rounded-full bg-white shadow hover:bg-gray-100 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </Link>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Tour Packages</h1>
+              <p className="text-gray-600 mt-1">Manage your tour packages and experiences</p>
             </div>
           </div>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Plus className="w-5 h-5" />
+            New Package
+          </button>
         </div>
-        <div className="mb-4">
-          <textarea name="descripcion" value={newPakk.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" />
-        </div>
-        <div className="mb-4">
-          <input name="duracion" value={newPakk.duracion} onChange={handleChange} placeholder="Duración" className="w-full border border-blue-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-300" />
-        </div>
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <label className="block text-xs font-semibold text-blue-700 mb-1">Imagen {i+1}</label>
-              <input type="file" accept="image/*" onChange={e => handleImageChange(i, e)} className="w-full text-xs" />
-            </div>
-          ))}
-        </div>
-        <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-2 rounded-lg font-bold shadow hover:from-blue-700 hover:to-blue-500 transition" disabled={adding}>{adding ? 'Adding...' : 'Add'}</button>
-        {addError && <div className="text-red-600 mt-2">{addError}</div>}
-      </form>
-      {loading ? (
-        <div>Loading data...</div>
-      ) : error ? (
-        <div className="text-red-600">Error: {error}</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {pakk.map((paq, idx) => (
-            <div key={idx} className="bg-white/90 rounded-2xl shadow-xl p-6 flex flex-col border border-blue-100 hover:shadow-2xl transition relative">
-              {editIndex === idx ? (
-                <>
-                  <div className="flex gap-2 overflow-x-auto mb-4 rounded-lg">
-                    {[...Array(10)].map((_, i) => {
-                      const img = editImages[i]
-                        ? URL.createObjectURL(editImages[i] as File)
-                        : (editPakk && editPakk[`imagen${i+1}` as keyof Pakk] as string);
-                      return (
-                        <div key={i} className="flex flex-col items-center">
-                          {img && <img src={img} alt={`Imagen ${i+1}`} className="w-24 h-16 object-cover rounded border mb-1" />}
-                          <input type="file" accept="image/*" onChange={e => handleEditImageChange(i, e)} className="w-24 text-xs" />
+
+        {/* Global Alerts */}
+        {error && !modalOpen && (
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+            <span className="text-red-800">{error}</span>
+          </div>
+        )}
+
+        {success && !modalOpen && (
+          <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start">
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+            <span className="text-green-800">{success}</span>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mb-4"></div>
+            <p className="text-gray-600">Loading packages...</p>
+          </div>
+        ) : pakk.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">No packages yet</h3>
+            <p className="text-gray-600 mb-6">Create your first tour package to get started</p>
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Create Package
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pakk.map((paq) => {
+              const mainImage = paq.imagen1 || paq.imagen2 || paq.imagen3 || '/placeholder.jpg';
+              const includedItems = paq.incluye ? JSON.parse(paq.incluye) : [];
+              
+              return (
+                <div key={paq.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                  {/* Image */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={mainImage}
+                      alt={paq.titulo}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(paq.categoria)}`}>
+                        {getCategoryLabel(paq.categoria)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">{paq.titulo}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{paq.descripcion}</p>
+
+                    {/* Details */}
+                    <div className="space-y-2 mb-4">
+                      {paq.duracion && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Clock className="w-4 h-4 mr-2 text-teal-600" />
+                          {paq.duracion}
                         </div>
-                      );
-                    })}
+                      )}
+                      {paq.precio_por_persona && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <DollarSign className="w-4 h-4 mr-2 text-teal-600" />
+                          ${paq.precio_por_persona} per person
+                        </div>
+                      )}
+                      {paq.max_personas && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="w-4 h-4 mr-2 text-teal-600" />
+                          Max {paq.max_personas} people
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Included Items */}
+                    {includedItems.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">INCLUDES:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {includedItems.slice(0, 3).map((item: string, idx: number) => (
+                            <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                              {item}
+                            </span>
+                          ))}
+                          {includedItems.length > 3 && (
+                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                              +{includedItems.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditModal(paq)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-semibold"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => paq.id && handleDelete(paq.id)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <input name="titulo" value={editPakk?.titulo || ''} onChange={handleEditChange} placeholder="Title" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
-                  <input name="categoria" value={editPakk?.categoria || ''} onChange={handleEditChange} placeholder="Category" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
-                  <textarea name="incluye" value={editPakk?.incluye ? JSON.parse(editPakk.incluye).join('  ') : ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, incluye: JSON.stringify(getIncluyeArray(e.target.value)) } : null)} placeholder='Write each item separated by two spaces' className="w-full border border-blue-200 rounded px-3 py-2 mb-2 min-h-[60px]" />
-                  {editPakk?.incluye && (
-                    <ul className="list-disc pl-5 text-sm text-blue-700 mb-2">
-                      {JSON.parse(editPakk.incluye).map((item: string, i: number) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <textarea name="descripcion" value={editPakk?.descripcion || ''} onChange={handleEditChange} placeholder="Descripción" className="w-full border border-blue-200 rounded px-3 py-2 mb-2" />
-                  <input name="duracion" value={editPakk?.duracion || ''} onChange={handleEditChange} placeholder="Duration" className="w-full border border-blue-200 rounded px-3 py-2 mb-4" />
-                  <div className="mb-2 grid grid-cols-2 gap-2">
-                    <input type="number" name="precio_por_persona" value={editPakk?.precio_por_persona ?? ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, precio_por_persona: e.target.value ? Number(e.target.value) : undefined } : null)} placeholder="Precio por persona (USD)" className="w-full border border-blue-200 rounded px-3 py-2" min="0" step="0.01" />
-                    <input type="number" name="max_personas" value={editPakk?.max_personas ?? ''} onChange={e => setEditPakk(editPakk ? { ...editPakk, max_personas: e.target.value ? Number(e.target.value) : undefined } : null)} placeholder="Máx. de personas" className="w-full border border-blue-200 rounded px-3 py-2" min="1" step="1" />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slideUp">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-teal-500 to-blue-600 text-white p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold">{editMode ? 'Edit Package' : 'Create New Package'}</h2>
+                <button
+                  onClick={closeModal}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Alerts */}
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-red-800">{error}</span>
                   </div>
-                  <div className="flex gap-2 justify-end">
-                    <button onClick={handleEditSave} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 transition" disabled={adding}>{adding ? 'Saving...' : 'Save'}</button>
-                    <button onClick={handleEditCancel} className="bg-gray-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-gray-500 transition">Cancel</button>
+                )}
+
+                {success && (
+                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-green-800">{success}</span>
                   </div>
-                  {editError && <div className="text-red-600 mt-2">{editError}</div>}
-                </>
-              ) : (
-                <>
-                  <div className="flex gap-2 overflow-x-auto mb-4 rounded-lg">
-                    {[...Array(10)].map((_, i) => {
-                      const img = paq[`imagen${i+1}` as keyof Pakk] as string | undefined;
-                      return img ? (
-                        <img key={i} src={img} alt={`Imagen ${i+1}`} className="w-32 h-24 object-cover rounded-lg border border-blue-200 shadow-sm" />
-                      ) : null;
-                    })}
+                )}
+
+                {/* Form */}
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Tag className="w-4 h-4 inline mr-1" />
+                        Title *
+                      </label>
+                      <input
+                        type="text"
+                        name="titulo"
+                        value={currentPakk.titulo}
+                        onChange={handleChange}
+                        placeholder="e.g., Snorkeling Adventure"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                      <select
+                        name="categoria"
+                        value={currentPakk.categoria || ''}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      >
+                        <option value="">Select category</option>
+                        <option value="water-adventure">Water Adventure</option>
+                        <option value="nature">Nature</option>
+                        <option value="romantic">Romantic</option>
+                        <option value="adventure">Adventure</option>
+                      </select>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold mb-2 text-blue-700">{paq.titulo}</h2>
-                                {paq.categoria && (
-                                  <div className="mb-1"><span className="font-semibold text-blue-600">Category:</span> {paq.categoria}</div>
-                                )}
-                                {paq.precio_por_persona !== undefined && (
-                                  <div className="mb-1"><span className="font-semibold text-blue-600">Price per person:</span> {formatUSD(paq.precio_por_persona)}</div>
-                                )}
-                                {paq.max_personas !== undefined && (
-                                  <div className="mb-1"><span className="font-semibold text-blue-600">Max. people:</span> {paq.max_personas}</div>
-                                )}
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Includes:</span> {renderIncluye(paq.incluye)}</div>
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Description:</span> {paq.descripcion}</div>
-                  <div className="mb-1"><span className="font-semibold text-blue-600">Duration:</span> {paq.duracion}</div>
-                  <div className="flex gap-2 mt-4 justify-end">
-                    <button onClick={() => handleEditClick(idx)} className="bg-yellow-400 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition">Edit</button>
-                    <button onClick={() => handleDelete(paq.id)} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-700 transition" disabled={deleting === paq.id}>{deleting === paq.id ? 'Deleting...' : 'Delete'}</button>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea
+                      name="descripcion"
+                      value={currentPakk.descripcion}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder="Describe your tour package..."
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors resize-none"
+                    />
                   </div>
-                </>
-              )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Clock className="w-4 h-4 inline mr-1" />
+                        Duration
+                      </label>
+                      <input
+                        type="text"
+                        name="duracion"
+                        value={currentPakk.duracion}
+                        onChange={handleChange}
+                        placeholder="e.g., 3-4 hours"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <DollarSign className="w-4 h-4 inline mr-1" />
+                        Price per Person
+                      </label>
+                      <input
+                        type="number"
+                        name="precio_por_persona"
+                        value={currentPakk.precio_por_persona ?? ''}
+                        onChange={(e) => setCurrentPakk(prev => ({ ...prev, precio_por_persona: e.target.value ? Number(e.target.value) : undefined }))}
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Users className="w-4 h-4 inline mr-1" />
+                        Max People
+                      </label>
+                      <input
+                        type="number"
+                        name="max_personas"
+                        value={currentPakk.max_personas ?? ''}
+                        onChange={(e) => setCurrentPakk(prev => ({ ...prev, max_personas: e.target.value ? Number(e.target.value) : undefined }))}
+                        placeholder="0"
+                        min="1"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      What's Included? <span className="text-gray-500 font-normal">(Separate with double spaces)</span>
+                    </label>
+                    <textarea
+                      name="incluye"
+                      value={currentPakk.incluye}
+                      onChange={handleChange}
+                      rows={3}
+                      placeholder="Equipment  Guide  Snacks  Transportation"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors resize-none"
+                    />
+                    {getIncluyeArray(currentPakk.incluye).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {getIncluyeArray(currentPakk.incluye).map((item, i) => (
+                          <span key={i} className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm">
+                            ✓ {item}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Images */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <ImageIcon className="w-4 h-4 inline mr-1" />
+                      Images (up to 10)
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      {Array.from({ length: 10 }).map((_, i) => {
+                        const existingImage = editMode ? currentPakk[`imagen${i+1}` as keyof Pakk] as string : null;
+                        const preview = images[i] ? URL.createObjectURL(images[i]!) : existingImage;
+
+                        return (
+                          <div key={i} className="relative">
+                            <div className="aspect-square border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-teal-500 transition-colors bg-gray-50">
+                              {preview ? (
+                                <img src={preview} alt={`Preview ${i+1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Upload className="w-6 h-6 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(i, e)}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <div className="absolute bottom-1 right-1 bg-white rounded px-2 py-0.5 text-xs font-semibold shadow">
+                              {i + 1}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex gap-3 mt-8 pt-6 border-t-2 border-gray-100">
+                  <button
+                    onClick={closeModal}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        {editMode ? 'Update Package' : 'Create Package'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

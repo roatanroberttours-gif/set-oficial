@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, X, Save, Upload, Image as ImageIcon, AlertCircle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSupabaseSet } from '../hooks/supabaseset';
 
 type GalleryRow = {
@@ -19,20 +19,21 @@ export default function AdminGallery() {
   const client = useSupabaseSet();
   const [rows, setRows] = useState<GalleryRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<GalleryRow>({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentItem, setCurrentItem] = useState<GalleryRow>({});
   const [files, setFiles] = useState<Array<File | null>>([null, null, null, null, null]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Lightbox state: when user toca una card se muestran todas sus imágenes
+  // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     loadRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadRows = async () => {
@@ -42,23 +43,36 @@ export default function AdminGallery() {
       if (error) throw error;
       setRows((data as GalleryRow[]) || []);
     } catch (err: any) {
-      console.error('Error loading gallery rows', err);
       setError(String(err.message || err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNew = () => {
-    setEditingId(null);
-    setForm({ title: '', description: '' });
+  const openCreateModal = () => {
+    setEditMode(false);
+    setCurrentItem({ title: '', description: '' });
     setFiles([null, null, null, null, null]);
+    setModalOpen(true);
+    setError(null);
+    setSuccess(null);
   };
 
-  const handleEdit = (r: GalleryRow) => {
-    setEditingId(r.id ?? null);
-    setForm({ ...r });
+  const openEditModal = (r: GalleryRow) => {
+    setEditMode(true);
+    setCurrentItem({ ...r });
     setFiles([null, null, null, null, null]);
+    setModalOpen(true);
+    setError(null);
+    setSuccess(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setCurrentItem({});
+    setFiles([null, null, null, null, null]);
+    setError(null);
+    setSuccess(null);
   };
 
   const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,35 +119,35 @@ export default function AdminGallery() {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
+    setSuccess(null);
+
     try {
-      const update: any = { ...form };
-      // upload files slots: 0->portada, 1..4 imagen1..imagen4
-      const prev = rows.find(r => r.id === editingId);
-      const prevUrls = prev || {};
-      const uploaded: any = {};
+      const update: any = { ...currentItem };
+      
+      // Upload new images
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const slot = i === 0 ? 'portada' : `imagen${i}`;
         if (file) {
-          const newUrl = await uploadFileIfNeeded(file, slot, (prevUrls as any)?.[slot]);
-          uploaded[slot] = newUrl;
+          const prev = editMode ? rows.find(r => r.id === currentItem.id) : null;
+          const newUrl = await uploadFileIfNeeded(file, slot, (prev as any)?.[slot]);
+          update[slot] = newUrl;
         }
       }
-      Object.assign(update, uploaded);
 
-      if (editingId) {
-        const { data, error } = await client.from('gallery').update(update).eq('id', editingId).select();
+      if (editMode && currentItem.id) {
+        const { error } = await client.from('gallery').update(update).eq('id', currentItem.id).select();
         if (error) throw error;
+        setSuccess('Gallery item updated successfully!');
       } else {
-        const { data, error } = await client.from('gallery').insert(update).select();
+        const { error } = await client.from('gallery').insert(update).select();
         if (error) throw error;
+        setSuccess('Gallery item created successfully!');
       }
+
       await loadRows();
-      setEditingId(null);
-      setForm({});
-      setFiles([null, null, null, null, null]);
+      setTimeout(() => closeModal(), 1500);
     } catch (err: any) {
-      console.error('Save error', err);
       setError(String(err.message || err));
     } finally {
       setSaving(false);
@@ -188,99 +202,304 @@ export default function AdminGallery() {
   }, [lightboxOpen, lightboxImages.length]);
 
   return (
-    <div className="min-h-screen pt-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 pt-20 px-4 pb-12">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-full bg-white/90 hover:bg-gray-100 shadow">
+            <Link to="/admin" className="p-2 rounded-full bg-white shadow hover:bg-gray-100 transition-colors">
               <ArrowLeft className="w-5 h-5 text-gray-700" />
             </Link>
-            <h2 className="text-2xl font-bold">Admin Gallery</h2>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Gallery Management</h1>
+              <p className="text-gray-600 mt-1">Create and manage your image galleries</p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={handleNew} className="px-4 py-2 bg-blue-600 text-white rounded">New Card</button>
-            <button onClick={loadRows} className="px-4 py-2 bg-gray-100 rounded">Reload</button>
-          </div>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Plus className="w-5 h-5" />
+            New Gallery
+          </button>
         </div>
 
-        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700">{error}</div>}
+        {/* Global Alerts */}
+        {error && !modalOpen && (
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+            <span className="text-red-800">{error}</span>
+          </div>
+        )}
 
-        {/* Editor */}
-        {(editingId !== null || form.title !== undefined) && (
-          <div className="mb-6 bg-white p-4 rounded shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                  <label className="text-sm">Title</label>
-                <input value={form.title || ''} onChange={e => setForm({...form, title: e.target.value})} className="w-full p-2 border rounded" />
-              </div>
-              <div>
-                <label className="text-sm">Description</label>
-                <input value={form.description || ''} onChange={e => setForm({...form, description: e.target.value})} className="w-full p-2 border rounded" />
-              </div>
-            </div>
+        {success && !modalOpen && (
+          <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start">
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+            <span className="text-green-800">{success}</span>
+          </div>
+        )}
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
-              {[0,1,2,3,4].map(i => (
-                <div key={i} className="p-2 bg-gray-50 rounded">
-                  <label className="text-xs text-gray-500">{i===0 ? 'Cover' : `Image ${i}`}</label>
-                  <div className="h-32 bg-gray-100 my-2 rounded overflow-hidden flex items-center justify-center">
-                    {files[i] ? (
-                      <img src={URL.createObjectURL(files[i] as File)} alt="preview" className="w-full h-full object-cover" />
-                    ) : (editingId ? (
-                      <img src={(form as any)[i===0 ? 'portada' : `imagen${i}`] || ''} alt="preview" className="w-full h-full object-cover" />
-                    ) : null)}
+        {/* Loading State */}
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600 mb-4"></div>
+            <p className="text-gray-600">Loading galleries...</p>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
+            <div className="text-6xl mb-4">🖼️</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">No galleries yet</h3>
+            <p className="text-gray-600 mb-6">Create your first gallery to showcase your images</p>
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Create Gallery
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {rows.map((r) => {
+              const coverImage = r.portada || r.imagen1 || '/placeholder.jpg';
+              
+              return (
+                <div key={r.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                  {/* Image */}
+                  <div
+                    className="relative h-48 overflow-hidden cursor-pointer"
+                    onClick={() => openLightbox(r, 0)}
+                  >
+                    <img
+                      src={coverImage}
+                      alt={r.title || 'Gallery'}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                      <span className="text-white font-semibold">View Gallery</span>
+                    </div>
                   </div>
-                  <input type="file" accept="image/*" onChange={e => handleFileChange(i, e)} />
-                </div>
-              ))}
-            </div>
 
-            <div className="flex gap-2 mt-4">
-              <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded">{saving ? 'Saving...' : 'Save'}</button>
-              <button onClick={() => { setEditingId(null); setForm({}); setFiles([null,null,null,null,null]); }} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{r.title || 'Untitled'}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{r.description || 'No description'}</p>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditModal(r)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors font-semibold text-sm"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold text-sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Edit/Create Modal */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slideUp">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-amber-600 text-white p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold">{editMode ? 'Edit Gallery' : 'Create New Gallery'}</h2>
+                <button
+                  onClick={closeModal}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Alerts */}
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start">
+                    <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-red-800">{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-green-800">{success}</span>
+                  </div>
+                )}
+
+                {/* Form */}
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+                      <input
+                        type="text"
+                        value={currentItem.title || ''}
+                        onChange={(e) => setCurrentItem({ ...currentItem, title: e.target.value })}
+                        placeholder="e.g., Beach Sunset Collection"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                      <input
+                        type="text"
+                        value={currentItem.description || ''}
+                        onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
+                        placeholder="Brief description..."
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Images */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <ImageIcon className="w-4 h-4 inline mr-1" />
+                      Gallery Images (up to 5)
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      {[0, 1, 2, 3, 4].map((i) => {
+                        const slot = i === 0 ? 'portada' : `imagen${i}`;
+                        const existingImage = editMode ? (currentItem as any)[slot] : null;
+                        const preview = files[i] ? URL.createObjectURL(files[i]!) : existingImage;
+
+                        return (
+                          <div key={i} className="relative">
+                            <div className="aspect-square border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-orange-500 transition-colors bg-gray-50">
+                              {preview ? (
+                                <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Upload className="w-8 h-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileChange(i, e)}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <div className="absolute bottom-1 right-1 bg-white rounded px-2 py-0.5 text-xs font-semibold shadow">
+                              {i === 0 ? 'Cover' : i}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex gap-3 mt-8 pt-6 border-t-2 border-gray-100">
+                  <button
+                    onClick={closeModal}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        {editMode ? 'Update Gallery' : 'Create Gallery'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Grid: 5 columns per row, up to 15 cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-          {rows.slice(0,15).map((r, idx) => (
-            <div key={r.id ?? idx} className="bg-white rounded shadow overflow-hidden">
-              <div onClick={() => openLightbox(r, 0)} role="button" tabIndex={0} className="h-40 bg-gray-100 overflow-hidden cursor-pointer">
-                <img src={r.portada || r.imagen1 || ''} alt={r.title || ''} className="w-full h-full object-cover" />
-              </div>
-              <div className="p-3">
-                <h3 className="font-semibold text-sm mb-1">{r.title || 'Untitled'}</h3>
-                <p className="text-xs text-gray-500 line-clamp-3 mb-2">{r.description || ''}</p>
-                <div className="flex gap-2">
-                  <button onClick={() => handleEdit(r)} className="flex-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-sm">Edit</button>
-                  <button onClick={() => handleDelete(r.id)} className="flex-1 px-2 py-1 bg-red-100 text-red-700 rounded text-sm">Delete</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Lightbox modal */}
+        {/* Lightbox Modal */}
         {lightboxOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/70" onClick={() => setLightboxOpen(false)} />
-            <div className="relative max-w-4xl w-full mx-4">
-              <div className="bg-transparent p-2 rounded">
-                  <img src={lightboxImages[lightboxIndex]} alt={`Image ${lightboxIndex+1}`} className="w-full max-h-[80vh] object-contain mx-auto rounded" />
-                <div className="flex items-center justify-between mt-2">
-                  <button onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.max(0, i - 1)); }} className="px-3 py-1 bg-white/90 rounded">‹</button>
-                  <div className="text-sm text-white/90">{lightboxIndex + 1} / {lightboxImages.length}</div>
-                  <button onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1)); }} className="px-3 py-1 bg-white/90 rounded">›</button>
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            {lightboxImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setLightboxIndex(i => Math.max(0, i - 1))}
+                  disabled={lightboxIndex === 0}
+                  className="absolute left-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"
+                >
+                  <ChevronLeft className="w-8 h-8 text-white" />
+                </button>
+
+                <button
+                  onClick={() => setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1))}
+                  disabled={lightboxIndex === lightboxImages.length - 1}
+                  className="absolute right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30"
+                >
+                  <ChevronRight className="w-8 h-8 text-white" />
+                </button>
+              </>
+            )}
+
+            <div className="max-w-6xl w-full">
+              <img
+                src={lightboxImages[lightboxIndex]}
+                alt={`Gallery ${lightboxIndex + 1}`}
+                className="w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              />
+              {lightboxImages.length > 1 && (
+                <div className="text-center mt-4">
+                  <span className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold">
+                    {lightboxIndex + 1} / {lightboxImages.length}
+                  </span>
                 </div>
-                <div className="absolute top-2 right-2">
-                  <button onClick={() => setLightboxOpen(false)} className="px-2 py-1 bg-white/90 rounded">Close</button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
