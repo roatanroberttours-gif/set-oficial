@@ -6,7 +6,6 @@ import {
   Star,
   ArrowRight,
   Calendar,
-  Filter,
   Search,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -19,10 +18,12 @@ const ServicesPage: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTour, setSelectedTour] = useState<Tour | undefined>(undefined);
+  const [selectedTour, setSelectedTour] = useState<Tour | undefined>();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const client = useSupabaseSet();
 
   useEffect(() => {
     loadTours();
@@ -32,16 +33,18 @@ const ServicesPage: React.FC = () => {
     filterTours();
   }, [tours, selectedCategory, searchTerm]);
 
-  const client = useSupabaseSet();
-
   const loadTours = async () => {
     try {
       setLoading(true);
-      const { data, error } = await client.from('paquetes').select('*');
+      const { data, error } = await client.from("paquetes").select("*");
       if (error) throw error;
+
       const mapped: Tour[] = (data || []).map((paq: any) => {
-        const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]);
-        const image = images.find((img: any) => img) || '';
+        const images = Array.from({ length: 10 }).map(
+          (_, i) => paq[`imagen${i + 1}`]
+        );
+        const image = images.find((img: any) => img) || "";
+
         let included: string[] | undefined = undefined;
         try {
           if (paq.incluye) {
@@ -51,30 +54,49 @@ const ServicesPage: React.FC = () => {
         } catch (e) {
           included = undefined;
         }
+
         return {
           id: String(paq.id),
-          name: paq.titulo || '',
-          description: paq.descripcion || '',
-          personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
-          price: paq.precio_por_persona ?? (paq.price ?? 0),
-          image: image,
-          duration: paq.duracion || '',
+          name: paq.titulo || "",
+          description: paq.descripcion || "",
+          personPrice: paq.precio_por_persona ?? paq.price ?? 0,
+          price: paq.precio_por_persona ?? paq.price ?? 0,
+          image,
+          duration: paq.duracion || "",
           included,
-          category: paq.categoria || 'adventure',
-        } as Tour;
+          category: paq.categoria || "adventure",
+        };
       });
+
       setTours(mapped);
     } catch (error) {
-      console.error("Error loading tours from Supabase:", error);
+      console.error("Error loading tours:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const filterTours = () => {
-    let filtered = tours;
+    let filtered = [...tours];
 
-   
+    // FILTRO POR CATEGORÍA
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(
+        (t) =>
+          (t.category || "").toLowerCase() ===
+          selectedCategory.toLowerCase()
+      );
+    }
+
+    // FILTRO POR BÚSQUEDA
+    if (searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (t) =>
+          t.name.toLowerCase().includes(term) ||
+          t.description.toLowerCase().includes(term)
+      );
+    }
 
     setFilteredTours(filtered);
   };
@@ -132,33 +154,11 @@ const ServicesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-20">
-        {/* Hero Section Skeleton */}
+        {/* Skeleton */}
         <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="animate-pulse">
-              <div className="h-12 bg-white/20 rounded w-96 mx-auto mb-4"></div>
-              <div className="h-6 bg-white/20 rounded w-2/3 mx-auto"></div>
-            </div>
-          </div>
-        </section>
-
-        {/* Content Skeleton */}
-        <section className="py-12">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <div className="h-48 bg-gray-200"></div>
-                    <div className="p-6">
-                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                      <div className="h-16 bg-gray-200 rounded mb-4"></div>
-                      <div className="h-10 bg-gray-200 rounded"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="container mx-auto px-4 text-center animate-pulse">
+            <div className="h-12 bg-white/20 rounded w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-white/20 rounded w-2/3 mx-auto"></div>
           </div>
         </section>
       </div>
@@ -167,157 +167,108 @@ const ServicesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              {t.services.title}
-            </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8">
-              {t.services.subtitle}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="text-lg">
-                <span className="font-semibold">{tours.length}</span> Tours
-                Disponibles
-              </div>
-              <div className="text-lg">
-                <span className="font-semibold">4.9/5</span> Calificación
-                Promedio
-              </div>
-              <div className="text-lg">
-                <span className="font-semibold">500+</span> Aventureros Felices
-              </div>
-            </div>
-          </div>
+      {/* Header */}
+      <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600 text-white relative">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            {t.services.title}
+          </h1>
+          <p className="text-xl mb-8">{t.services.subtitle}</p>
         </div>
       </section>
 
-   
-      {/* Tours Grid */}
       <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4">
+
+          {/* === FILTROS Y BÚSQUEDA === */}
+          <div className="mb-10">
+            {/* Barra de búsqueda */}
+            <div className="flex items-center bg-white px-4 py-3 rounded-xl shadow border w-full md:w-1/2 mx-auto mb-6">
+              <Search className="w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar tours..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="ml-3 w-full outline-none text-gray-700"
+              />
+            </div>
+
+            {/* Categorías */}
+            <div className="flex gap-3 justify-center flex-wrap">
+           
+            </div>
+          </div>
+
+          {/* Si no hay tours */}
           {filteredTours.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                No se encontraron tours
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Intenta cambiar los filtros o el término de búsqueda
-              </p>
+              <h3 className="text-2xl font-bold">No se encontraron tours</h3>
               <button
                 onClick={() => {
                   setSelectedCategory("all");
                   setSearchTerm("");
                 }}
-                className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200"
+                className="mt-4 px-6 py-3 bg-teal-500 text-white rounded-lg"
               >
                 Limpiar Filtros
               </button>
             </div>
           ) : (
+            /* GRID */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredTours.map((tour, index) => (
                 <div
                   key={tour.id}
-                  className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-2"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transform hover:-translate-y-2 transition-all"
                 >
-                  {/* Image */}
                   <div className="relative h-48 overflow-hidden">
                     <img
                       src={tour.image}
                       alt={tour.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                     />
                     <div className="absolute top-4 left-4">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-white text-sm font-medium bg-gradient-to-r ${getCategoryColor(tour.category || "default")}`}
+                        className={`inline-flex px-3 py-1 rounded-full text-white bg-gradient-to-r ${getCategoryColor(
+                          tour.category
+                        )}`}
                       >
-                        <span className="mr-1">
-                          {getCategoryIcon(tour.category || "default")}
-                        </span>
-                        {tour.category === "water-adventure"
-                          ? "Agua"
-                          : tour.category === "nature"
-                            ? "Naturaleza"
-                            : tour.category === "romantic"
-                              ? "Romántico"
-                              : "Aventura"}
+                        {getCategoryIcon(tour.category)} {tour.category}
                       </span>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
-                        <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                        <span className="text-sm font-medium">4.9</span>
-                      </div>
                     </div>
                   </div>
 
-                  {/* Content */}
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-teal-600 transition-colors duration-200">
-                      {tour.name}
-                    </h3>
-
+                    <h3 className="text-xl font-bold mb-3">{tour.name}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">
                       {tour.description}
                     </p>
 
-                    {/* Tour Details */}
-                    <div className="space-y-2 mb-6">
-                      {tour.duration && (
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Clock className="w-4 h-4 mr-2 text-teal-500" />
-                          <span>{tour.duration}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Users className="w-4 h-4 mr-2 text-teal-500" />
-                        <span>Grupos pequeños (máx. 8 personas)</span>
-                      </div>
-                      {tour.included && tour.included.length > 0 && (
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">Incluye:</span>{" "}
-                          {tour.included.slice(0, 2).join(", ")}
-                          {tour.included.length > 2 && "..."}
-                        </div>
-                      )}
+                    <div className="flex items-center text-sm text-gray-500 mb-4">
+                      <Clock className="w-4 h-4 mr-2 text-teal-500" />
+                      {tour.duration}
                     </div>
 
-                    {/* Price */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <span className="text-2xl font-bold text-gray-800">
-                          ${tour.price}
-                        </span>
-                        <span className="text-gray-500 ml-1">/ persona</span>
-                      </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-2xl font-bold">${tour.price}</span>
+                      <span className="text-gray-500">/ persona</span>
                     </div>
 
-                    {/* Buttons */}
-                    <div className="flex space-x-3">
+                    <div className="flex gap-3">
                       <Link
                         to={`/service/${tour.id}`}
-                        className="flex-1 flex items-center justify-center px-4 py-3 border border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors duration-200"
+                        className="flex-1 px-4 py-3 border border-teal-500 text-teal-600 rounded-lg text-center"
                       >
-                        <span className="text-sm font-medium">
-                          {t.services.viewDetails}
-                        </span>
-                        <ArrowRight className="w-4 h-4 ml-1" />
+                        {t.services.viewDetails}
                       </Link>
 
                       <button
                         onClick={() => handleBookNow(tour)}
-                        className="flex-1 flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg"
                       >
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span className="text-sm font-medium">
-                          {t.services.bookNow}
-                        </span>
+                        {t.services.bookNow}
                       </button>
                     </div>
                   </div>
@@ -328,7 +279,6 @@ const ServicesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Booking Modal */}
       {showBookingModal && (
         <BookingModal
           isOpen={showBookingModal}

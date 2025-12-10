@@ -1,5 +1,7 @@
 
 import React, { useEffect, useState } from "react";
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 type AdminRow = {
@@ -238,7 +240,13 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Admin - Site Settings</h2>
+      <div className="flex items-center gap-4 mb-4">
+        <Link to="/admin" className="inline-flex items-center px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Link>
+        <h2 className="text-2xl font-semibold mb-0">Admin - Site Settings</h2>
+      </div>
       {/* Credentials editor */}
       <div className="p-4 bg-white rounded shadow mb-6">
         <h3 className="text-lg font-semibold mb-3">Admin Credentials</h3>

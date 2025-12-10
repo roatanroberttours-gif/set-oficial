@@ -1,4 +1,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 export type Pakk = {
@@ -232,7 +234,13 @@ export default function PakkPage() {
 
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen">
-        <h1 className="text-4xl font-extrabold mb-8 text-center text-blue-800 drop-shadow">Pakk</h1>
+      <div className="flex items-center gap-4 mb-6 max-w-6xl mx-auto px-2">
+        <Link to="/admin" className="p-2 rounded-full bg-white shadow hover:bg-gray-100">
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
+        </Link>
+        <h1 className="text-4xl font-extrabold mb-0 text-blue-800 drop-shadow">Pakk</h1>
+      </div>
+      
       <form onSubmit={handleAdd} className="mb-10 bg-white/90 p-6 rounded-xl shadow-lg max-w-2xl mx-auto border border-blue-100">
         <h2 className="text-2xl font-bold mb-4 text-blue-700">Add New Package</h2>
         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
