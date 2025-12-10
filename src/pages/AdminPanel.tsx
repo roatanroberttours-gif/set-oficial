@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Home,
   Video,
+  MapPin,
 } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
@@ -90,6 +91,15 @@ const AdminPanel: React.FC = () => {
       color: 'from-orange-500 to-red-600',
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-600',
+    },
+    {
+      title: 'Meeting Points',
+      description: 'Manage pickup locations and meeting zones',
+      icon: MapPin,
+      href: '/admin/meeting-points',
+      color: 'from-green-500 to-emerald-600',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
     },
   ];
 

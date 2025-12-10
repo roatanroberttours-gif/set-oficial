@@ -14,6 +14,7 @@ import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
 import AdminGallery from './pages/AdminGallery';
 import AdminVideos from './pages/AdminVideos';
+import AdminMeetingPoints from './pages/AdminMeetingPoints';
 import PoliticaCancelacion from './pages/PoliticaCancelacion';
 import PaquetesPage from './pages/PaquetesPage';
 import PakkPage from './pages/PakkPage';
@@ -39,6 +40,7 @@ function App() {
                 <Route path="admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="admin/settings" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
                 <Route path="admin/videos" element={<ProtectedRoute><AdminVideos /></ProtectedRoute>} />
+                <Route path="admin/meeting-points" element={<ProtectedRoute><AdminMeetingPoints /></ProtectedRoute>} />
                 <Route path="admingallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
                 <Route path="paquetes" element={<ProtectedRoute><PakkPage /></ProtectedRoute>} />
               </Route>
