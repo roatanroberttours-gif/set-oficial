@@ -186,7 +186,7 @@ const Services: React.FC = () => {
                   )}
                   <div className="flex items-center text-sm text-gray-500">
                     <Users className="w-4 h-4 mr-2 text-teal-500" />
-                    <span>Grupos pequeños (máx. {tour.max_personas ?? 8} personas)</span>
+                    <span>Grupos pequeños (máx. {tour.max_personas ?? 8})</span>
                   </div>
                 </div>
 
@@ -196,7 +196,7 @@ const Services: React.FC = () => {
                     <span className="text-2xl font-bold text-gray-800">
                       ${tour.price}
                     </span>
-                    <span className="text-gray-500 ml-1">/ persona</span>
+                    <span className="text-gray-500 ml-1"></span>
                   </div>
                 </div>
 
