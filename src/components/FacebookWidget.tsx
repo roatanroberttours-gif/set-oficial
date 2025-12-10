@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import './FacebookWidget.css';
 
 interface FacebookWidgetProps {
@@ -8,8 +8,8 @@ interface FacebookWidgetProps {
   likes?: number | string;
   info?: string;
   link?: string;
-  images?: string[];
-  autoplayMs?: number;
+  image?: string;
+  profile?: string;
 }
 
 const FacebookWidget = ({
@@ -19,52 +19,21 @@ const FacebookWidget = ({
   likes = '8.4k',
   info = 'Tours, snorkeling, and island adventures in Roatán. Contact us for private tours and group discounts.',
   link = 'https://www.facebook.com/share/17UcBueTar/',
-  images = ['/images/hero.jpeg'],
-  autoplayMs = 4000,
+  image = '/images/fbroa.jpg',
+  profile = '/images/logo.webp',
 }: FacebookWidgetProps) => {
-  const [index, setIndex] = useState(0);
-  const timer = useRef<number | null>(null);
-
-  const next = () => setIndex((i) => (images.length ? (i + 1) % images.length : 0));
-  const prev = () => setIndex((i) => (images.length ? (i - 1 + images.length) % images.length : 0));
-
-  useEffect(() => {
-    if (!images || images.length === 0) return;
-    if (timer.current) window.clearInterval(timer.current);
-    timer.current = window.setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, autoplayMs) as unknown as number;
-    return () => {
-      if (timer.current) window.clearInterval(timer.current);
-    };
-  }, [images, autoplayMs]);
 
   return (
     <div className="fb-widget" role="region" aria-label="Facebook widget">
 
-      {images && images.length > 0 && (
-        <div className="fb-carousel">
-          <button className="fb-nav prev" aria-label="Previous image" onClick={prev}>&lsaquo;</button>
-          <div className="fb-slide">
-            <img src={images[index]} alt={`${name} slide ${index + 1}`} />
-          </div>
-          <button className="fb-nav next" aria-label="Next image" onClick={next}>&rsaquo;</button>
-          <div className="fb-indicators">
-            {images.map((_, i) => (
-              <button
-                key={i}
-                className={`fb-ind ${i === index ? 'active' : ''}`}
-                aria-label={`Go to slide ${i + 1}`}
-                onClick={() => setIndex(i)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Imagen única */}
+      <div className="fb-image">
+        <img src={image} alt={`${name} main`} />
+      </div>
 
       <div className="fb-top">
         <div className="fb-avatar">
-          <img src={profileImage} alt={`${name} profile`} />
+          <img src={profile} alt={`${name} profile`} />
         </div>
         <div className="fb-info">
           <div className="fb-name">{name}</div>

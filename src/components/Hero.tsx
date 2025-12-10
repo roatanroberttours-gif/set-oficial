@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Play, Calendar, Users, Star } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import BookingModal from "./BookingModal";
@@ -26,20 +26,82 @@ const Hero: React.FC = () => {
     },
   ];
 
+  // Lista de imágenes servidas desde `public/images`
+  const images = [
+    
+    '/images/roatan-paradise.jpg',
+    '/images/snorkeling-adventure.webp',
+    '/images/sunset-boat-tour.jpg',
+      '/images/pop.avif',
+          '/images/pos.webp',
+        
+
+  
+  ];
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroTimer = useRef<number | null>(null);
+  const AUTOPLAY_MS = 5000;
+
+  const nextHero = () => setHeroIndex((i) => (images.length ? (i + 1) % images.length : 0));
+  const prevHero = () => setHeroIndex((i) => (images.length ? (i - 1 + images.length) % images.length : 0));
+
+  useEffect(() => {
+    if (!images || images.length === 0) return;
+    if (heroTimer.current) window.clearInterval(heroTimer.current);
+    heroTimer.current = window.setInterval(() => {
+      setHeroIndex((i) => (i + 1) % images.length);
+    }, AUTOPLAY_MS) as unknown as number;
+    return () => {
+      if (heroTimer.current) window.clearInterval(heroTimer.current);
+    };
+  }, [images]);
+
   return (
     <section
       className="relative w-full flex items-center justify-center overflow-hidden pt-40 md:pt-56"
       style={{ height: "100vh" }}
     >
-  {/* Background Image with Overlay */}
+  {/* Background Image Carousel with Overlay */}
   <div className="absolute inset-0 z-0">
     <img
-      src={'/images/hero.jpeg'}
-      alt="Roatan Robert Tours"
+      src={images[heroIndex]}
+      alt={`Roatan Robert Tours ${heroIndex + 1}`}
       className="w-full h-full object-cover object-center"
       loading="lazy"
     />
     <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-teal-900/40"></div>
+
+    {/* Controls */}
+    {images.length > 1 && (
+      <>
+        <button
+          aria-label="Previous background"
+          onClick={prevHero}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/30 hover:bg-black/50 rounded-full w-10 h-10 flex items-center justify-center"
+        >
+          ‹
+        </button>
+        <button
+          aria-label="Next background"
+          onClick={nextHero}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/30 hover:bg-black/50 rounded-full w-10 h-10 flex items-center justify-center"
+        >
+          ›
+        </button>
+
+        {/* Indicators */}
+        <div className="absolute left-1/2 bottom-6 transform -translate-x-1/2 z-20 flex gap-2">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Go to background ${i + 1}`}
+              onClick={() => setHeroIndex(i)}
+              className={`w-3 h-3 rounded-full ${i === heroIndex ? 'bg-white' : 'bg-white/40'}`}
+            />
+          ))}
+        </div>
+      </>
+    )}
   </div>
 
 
