@@ -9,6 +9,7 @@ interface FacebookWidgetProps {
   info?: string;
   link?: string;
   image?: string;
+  images?: string[];
   profile?: string;
 }
 
@@ -20,8 +21,10 @@ const FacebookWidget = ({
   info = 'Tours, snorkeling, and island adventures in Roatán. Contact us for private tours and group discounts.',
   link = 'https://www.facebook.com/share/17UcBueTar/',
   image = '/images/fbroa.jpg',
+  images = undefined,
   profile = '/images/logo.webp',
 }: FacebookWidgetProps) => {
+  const displayed = images && images.length > 0 ? images[0] : image;
 
   return (
     <div className="fb-widget" role="region" aria-label="Facebook widget">
