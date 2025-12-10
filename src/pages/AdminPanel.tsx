@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ChevronRight,
   Home,
+  Video,
 } from 'lucide-react';
 
 const AdminPanel: React.FC = () => {
@@ -80,6 +81,15 @@ const AdminPanel: React.FC = () => {
       color: 'from-purple-500 to-pink-600',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
+    },
+    {
+      title: 'Video Manager',
+      description: 'Upload and manage homepage videos',
+      icon: Video,
+      href: '/admin/videos',
+      color: 'from-orange-500 to-red-600',
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-orange-600',
     },
   ];
 

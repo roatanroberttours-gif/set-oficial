@@ -3,6 +3,7 @@ import Hero from '../components/Hero';
 import Services from '../components/Services';
 import Experiences from '../components/Experiences';
 import Gallery from '../components/Gallery';
+import VideosSection from '../components/VideosSection';
 import Contact from '../components/Contact';
 import TripAdvisorWidget from '../components/TripAdvisorWidget';
 import FacebookWidget from '../components/FacebookWidget';
@@ -38,6 +39,7 @@ const Home: React.FC = () => {
       <Services />
       <Experiences />
       <Gallery />
+      <VideosSection />
       <Contact />
     </div>
   );
