@@ -94,6 +94,7 @@ const Footer: React.FC = () => {
     { label: t.nav.services, href: "/services" },
     { label: t.nav.gallery, href: "/gallery" },
     { label: t.nav.contact, href: "/contact" },
+    { label: 'Política de Cancelación', href: '/politica-de-cancelacion' },
   ];
 
   return (

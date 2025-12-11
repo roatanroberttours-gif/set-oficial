@@ -18,6 +18,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
 import BookingModal from "../components/BookingModal";
+import PolicyConfirmModal from "../components/PolicyConfirmModal";
 
 const ServiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,12 +27,12 @@ const ServiceDetailPage: React.FC = () => {
   const [tour, setTour] = useState<Tour | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [meetingPoints, setMeetingPoints] = useState<any[]>([]);
   const [admin, setAdmin] = useState<any | null>(null);
   const clientTop = useSupabaseSet();
 
@@ -49,23 +50,6 @@ const ServiceDetailPage: React.FC = () => {
     return () => { mounted = false; };
   }, [clientTop]);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data, error } = await clientTop
-          .from('meeting_points')
-          .select('*')
-          .eq('is_active', true)
-          .order('zone', { ascending: true });
-        if (error) throw error;
-        if (mounted) setMeetingPoints(data || []);
-      } catch (err) {
-        console.error('Error loading meeting points', err);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [clientTop]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -605,7 +589,7 @@ const ServiceDetailPage: React.FC = () => {
 
                 <div className="p-6 space-y-4">
                   <button
-                    onClick={() => setShowBookingModal(true)}
+                    onClick={() => setShowPolicyModal(true)}
                     className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl shadow-lg"
                   >
                     <Calendar className="w-5 h-5 inline mr-2" />
@@ -707,83 +691,18 @@ const ServiceDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Meeting Points Section */}
-        {meetingPoints.length > 0 && (
-          <div className="mt-12 animate-fadeInUp" style={{ animationDelay: "0.7s" }}>
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-100">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl mr-4">
-                    <MapPin className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-white mb-1">Meeting Points</h2>
-                    <p className="text-white/90 text-lg">Pickup locations by zone</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {meetingPoints.map((point) => (
-                    <div
-                      key={point.id}
-                      className="group bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-6 border-2 border-gray-200 hover:border-green-400 hover:shadow-xl transition-all duration-300"
-                    >
-                      {/* Zone Badge */}
-                      {point.zone && (
-                        <div className="mb-4">
-                          <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">
-                            {point.zone}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Title */}
-                      <div className="flex items-start mb-3">
-                        <div className="p-2 bg-green-100 rounded-lg mr-3 flex-shrink-0 group-hover:bg-green-200 transition-colors">
-                          <MapPin className="w-5 h-5 text-green-600" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 leading-tight">
-                          {point.title}
-                        </h3>
-                      </div>
-
-                      {/* Instructions */}
-                      {point.instructions && (
-                        <p className="text-gray-700 text-sm leading-relaxed mb-4 pl-11">
-                          {point.instructions}
-                        </p>
-                      )}
-
-                      {/* Map Link */}
-                      {point.map_url && (
-                        <div className="pl-11">
-                          <a
-                            href={point.map_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-green-500 text-green-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-300 font-semibold text-sm shadow-sm hover:shadow-md group/link"
-                          >
-                            <MapPin className="w-4 h-4" />
-                            View on Map
-                            <svg className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Additional Info */}
-             
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Meeting Points removed as requested */}
       </div>
+
+      {/* Policy confirmation modal (shown before booking) */}
+      <PolicyConfirmModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+        onAccept={() => {
+          setShowPolicyModal(false);
+          setShowBookingModal(true);
+        }}
+      />
 
       {/* Booking Modal */}
       {showBookingModal && (
