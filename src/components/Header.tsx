@@ -73,19 +73,33 @@ const Header: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [client]);
+    // Intentionally run only once on mount to match other pages
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load tours for dropdown menus
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        console.log("Header: Starting to load tours...");
+        
         // Load regular tours (paquetes)
         const { data: toursData, error: toursError } = await client
           .from("paquetes")
           .select("*")
           .order("id", { ascending: true });
-        if (toursError) throw toursError;
+        
+        console.log("Header: paquetes query result:", { 
+          data: toursData, 
+          error: toursError,
+          length: toursData?.length 
+        });
+        
+        if (toursError) {
+          console.error("Header: paquetes error:", toursError);
+          throw toursError;
+        }
         if (mounted) setTours(toursData || []);
 
         // Load private tours (same as PrivateTour.tsx page)
@@ -93,20 +107,32 @@ const Header: React.FC = () => {
           .from("private_tours")
           .select("*")
           .order("id", { ascending: true });
-        if (privateError) throw privateError;
+        
+        console.log("Header: private_tours query result:", { 
+          data: privateData, 
+          error: privateError,
+          length: privateData?.length 
+        });
+        
+        if (privateError) {
+          console.error("Header: private_tours error:", privateError);
+          throw privateError;
+        }
         if (mounted) setPrivateTours(privateData || []);
 
-        // Debug logs to verify data loading
-        console.log("Header: loaded paquetes:", toursData?.length || 0);
-        console.log("Header: loaded private_tours:", privateData?.length || 0);
+        console.log("Header: ✅ Successfully loaded tours!");
+        console.log("Header: tours state will be:", toursData?.length || 0);
+        console.log("Header: privateTours state will be:", privateData?.length || 0);
       } catch (err) {
-        console.error("Error loading tours for header dropdown:", err);
+        console.error("❌ Header: Error loading tours for header dropdown:", err);
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [client]);
+    // Run only on mount to avoid races if the Supabase client is recreated
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // When admin.logo is available it might be a remote signed URL that takes
   // time to resolve. Preload it and fall back to a local asset that works
