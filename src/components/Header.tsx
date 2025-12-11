@@ -10,6 +10,8 @@ const Header: React.FC = () => {
   const location = useLocation();
   const client = useSupabaseSet();
   const [admin, setAdmin] = useState<any | null>(null);
+  const baseLogo = `${import.meta.env.BASE_URL ?? '/'}logo.webp`;
+  const [logoSrc, setLogoSrc] = useState<string>(baseLogo);
 
   useEffect(() => {
     let mounted = true;
@@ -24,6 +26,26 @@ const Header: React.FC = () => {
     })();
     return () => { mounted = false; };
   }, [client]);
+
+  // When admin.logo is available it might be a remote signed URL that takes
+  // time to resolve. Preload it and fall back to a local asset that works
+  // regardless of deployment base path.
+  useEffect(() => {
+    if (!admin?.logo) {
+      setLogoSrc(baseLogo);
+      return;
+    }
+    let cancelled = false;
+    const img = new Image();
+    img.src = admin.logo;
+    img.onload = () => {
+      if (!cancelled) setLogoSrc(admin.logo);
+    };
+    img.onerror = () => {
+      if (!cancelled) setLogoSrc(baseLogo);
+    };
+    return () => { cancelled = true; };
+  }, [admin?.logo, baseLogo]);
 
   // Header is always visible and opaque; no scroll detection needed
 
@@ -59,7 +81,7 @@ const Header: React.FC = () => {
             onClick={() => setIsMenuOpen(false)}
           >
             <img
-              src={'./logo.webp'}
+              src={logoSrc}
               alt={`${admin?.nombre_web ?? 'Roatan Robert Tours'} Logo`}
               className="w-19 h-11 rounded-full shadow-lg border-9 border-white bg-white object-cover group-hover:scale-110 transition-transform duration-200"
               style={{ background: "white" }}
