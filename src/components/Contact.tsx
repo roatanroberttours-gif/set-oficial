@@ -167,11 +167,11 @@ const Contact: React.FC = () => {
                       {info.icon}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">
+                      <h3 className="font-semibold text-white mb-1">
                         {info.title}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-1">{info.value}</p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-white text-sm mb-1">{info.value}</p>
+                      <p className="text-white/85 text-xs">
                         {info.description}
                       </p>
                     </div>
