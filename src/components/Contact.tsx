@@ -137,10 +137,10 @@ const Contact: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             {t.contact.title}
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto">
             {t.contact.subtitle}
           </p>
         </div>
@@ -182,17 +182,15 @@ const Contact: React.FC = () => {
 
             {/* Business Hours */}
             <div className="bg-transparent backdrop-blur-sm p-6 rounded-2xl shadow-none">
-              <h3 className="flex items-center font-semibold text-gray-800 mb-4">
+              <h3 className="flex items-center font-semibold text-white mb-4">
                 <Clock className="w-5 h-5 mr-2 text-teal-500" />
-                Business Hours
+                {t.contact.business_hours_title}
               </h3>
               <div className="space-y-2">
                 {businessHours.map((schedule, index) => (
                   <div key={index} className="flex justify-between text-sm">
-                    <span className="text-gray-600">{schedule.day}</span>
-                    <span className="font-medium text-gray-800">
-                      {schedule.hours}
-                    </span>
+                    <span className="text-white/85">{schedule.day}</span>
+                    <span className="font-medium text-white">{schedule.hours}</span>
                   </div>
                 ))}
               </div>
@@ -200,7 +198,7 @@ const Contact: React.FC = () => {
 
             {/* Social Media */}
             <div className="bg-transparent backdrop-blur-sm p-6 rounded-2xl shadow-none">
-              <h3 className="font-semibold text-gray-800 mb-4">
+              <h3 className="font-semibold text-white mb-4">
                 {t.contact.social}
               </h3>
               <div className="flex space-x-4">
@@ -210,7 +208,7 @@ const Contact: React.FC = () => {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl text-gray-600 transition-all duration-200 ${social.color} hover:scale-110 hover:shadow-md`}
+                    className={`flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl text-white transition-all duration-200 ${social.color} hover:scale-110 hover:shadow-md`}
                     title={social.name}
                   >
                     {social.icon}
@@ -231,11 +229,8 @@ const Contact: React.FC = () => {
                     className="w-88 h-88 object-contain rounded-md"
                   />
                 )}
-                <h3 className="text-2xl font-bold text-gray-800">Contact Us</h3>
-                <p className="text-gray-600">
-                  We are ready to help. Send us a WhatsApp message, call, or
-                  email.
-                </p>
+                <h3 className="text-2xl font-bold text-white">{t.contact.title}</h3>
+                <p className="text-white/90">{t.contact.cta}</p>
 
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button
@@ -256,7 +251,7 @@ const Contact: React.FC = () => {
                         ? `tel:${admin.celular.replace(/\s+/g, "")}`
                         : "tel:+50432267504"
                     }
-                    className="px-6 py-3 bg-gray-100 rounded-lg text-gray-800 flex items-center justify-center"
+                    className="px-6 py-3 bg-white/10 rounded-lg text-white flex items-center justify-center"
                   >
                     Call
                   </a>
@@ -272,7 +267,7 @@ const Contact: React.FC = () => {
                   }
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm text-teal-600 underline mt-3"
+                  className="text-sm text-white/90 underline mt-3"
                 >
                   View location on Google Maps
                 </a>

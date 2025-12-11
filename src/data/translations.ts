@@ -20,6 +20,8 @@ const translations = {
       title: 'Tours y Servicios Destacados',
       subtitle:
         'Explora la riqueza natural de Roatán a través de experiencias auténticas y guiadas por expertos',
+      vip_tour: 'Tour VIP',
+      vip_tour_subtitle: 'Tours privados exclusivos — selección destacada',
       viewDetails: 'Ver Detalles',
       bookNow: 'Reservar Ahora',
       pricePerPerson: 'Precio por Persona',
@@ -31,6 +33,8 @@ const translations = {
     experiences: {
       title: 'Experiencias Memorables',
       subtitle: 'Opiniones y vivencias de nuestros aventureros',
+      explore_tours: 'Vive nuestros tours',
+      videos_subtitle: 'Mira nuestros videos de aventura y descubre las increíbles experiencias que te esperan',
     },
 
     gallery: {
@@ -42,6 +46,8 @@ const translations = {
     contact: {
       title: 'Ponte en Contacto',
       subtitle: 'Estamos listos para ayudarte a planear tu próxima aventura',
+      business_hours_title: 'Horario de Atención',
+      cta: 'Estamos listos para ayudarte. Envíanos un mensaje por WhatsApp, llama, o envía un correo.',
       phone: 'Teléfono',
       email: 'Correo Electrónico',
       whatsapp: 'WhatsApp',
@@ -107,6 +113,8 @@ const translations = {
       title: 'Our Featured Tours & Services',
       subtitle:
         'Discover Roatán’s natural beauty through authentic experiences guided by local experts',
+      vip_tour: 'Tour VIP',
+      vip_tour_subtitle: 'Exclusive private tours — featured selection',
       viewDetails: 'View Details',
       bookNow: 'Book Now',
       pricePerPerson: 'Price per Person',
@@ -118,6 +126,8 @@ const translations = {
     experiences: {
       title: 'Unforgettable Experiences',
       subtitle: 'What our adventurers are saying',
+      explore_tours: 'Experience Our Tours',
+      videos_subtitle: 'Watch our adventure videos and get a glimpse of the amazing experiences waiting for you',
     },
 
     gallery: {
@@ -129,6 +139,8 @@ const translations = {
     contact: {
       title: 'Contact Us',
       subtitle: 'We’re here to help you plan your next adventure',
+      business_hours_title: 'Business Hours',
+      cta: 'We are ready to help. Send us a WhatsApp message, call, or email.',
       phone: 'Phone',
       email: 'Email',
       whatsapp: 'WhatsApp',

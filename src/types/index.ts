@@ -52,6 +52,8 @@ export interface Translations {
   services: {
     title: string;
     subtitle: string;
+    vip_tour?: string;
+    vip_tour_subtitle?: string;
     viewDetails: string;
     bookNow: string;
     pricePerPerson: string;
@@ -62,6 +64,8 @@ export interface Translations {
   experiences: {
     title: string;
     subtitle: string;
+    explore_tours?: string;
+    videos_subtitle?: string;
   };
   gallery: {
     title: string;
@@ -71,6 +75,8 @@ export interface Translations {
   contact: {
     title: string;
     subtitle: string;
+    business_hours_title?: string;
+    cta?: string;
     phone: string;
     email: string;
     whatsapp: string;
