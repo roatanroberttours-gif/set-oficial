@@ -15,7 +15,7 @@ const GalleryPage: React.FC = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  
+
   const client = useSupabaseSet();
   const [admin, setAdmin] = useState<any | null>(null);
 
@@ -27,29 +27,41 @@ const GalleryPage: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        const { data, error } = await client
+          .from("admin")
+          .select("*")
+          .maybeSingle();
         if (error) throw error;
         if (mounted) setAdmin(data || null);
       } catch (err) {
-        console.error('Error loading admin for gallery:', err);
+        console.error("Error loading admin for gallery:", err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [client]);
 
   const loadGallery = async () => {
     setLoading(true);
     try {
-      const { data, error } = await client.from('gallery').select('*').order('id', { ascending: false }).limit(100);
+      const { data, error } = await client
+        .from("gallery")
+        .select("*")
+        .order("id", { ascending: false })
+        .limit(100);
       if (error) throw error;
       const mapped: GalleryItem[] = (data || []).map((g: any) => ({
         id: String(g.id),
-        image: g.portada || g.imagen1 || g.imagen2 || g.imagen3 || g.imagen4 || '',
-        title: g.title || g.titulo || '',
-        description: g.description || g.descripcion || '',
-        category: g.category || 'general',
+        image:
+          g.portada || g.imagen1 || g.imagen2 || g.imagen3 || g.imagen4 || "",
+        title: g.title || g.titulo || "",
+        description: g.description || g.descripcion || "",
+        category: g.category || "general",
         // images array keeps all images of the row for the lightbox
-        images: [g.portada, g.imagen1, g.imagen2, g.imagen3, g.imagen4].filter(Boolean) as string[],
+        images: [g.portada, g.imagen1, g.imagen2, g.imagen3, g.imagen4].filter(
+          Boolean
+        ) as string[],
       }));
       setGalleryItems(mapped);
     } catch (error) {
@@ -58,8 +70,6 @@ const GalleryPage: React.FC = () => {
       setLoading(false);
     }
   };
-
-  
 
   const openLightbox = (index: number) => {
     // legacy: keep selected index for whole-grid navigation if needed
@@ -99,23 +109,31 @@ const GalleryPage: React.FC = () => {
   useEffect(() => {
     if (!lightboxOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft') setLightboxIndex(i => Math.max(0, i - 1));
-      if (e.key === 'ArrowRight') setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") setLightboxIndex((i) => Math.max(0, i - 1));
+      if (e.key === "ArrowRight")
+        setLightboxIndex((i) => Math.min(lightboxImages.length - 1, i + 1));
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [lightboxOpen, lightboxImages.length]);
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'mangroves': return 'Mangroves';
-      case 'underwater': return 'Underwater';
-      case 'nature': return 'Nature';
-      case 'sunset': return 'Sunset';
-      case 'wildlife': return 'Wildlife';
-      case 'aerial': return 'Aerial';
-      default: return 'General';
+      case "mangroves":
+        return "Mangroves";
+      case "underwater":
+        return "Underwater";
+      case "nature":
+        return "Nature";
+      case "sunset":
+        return "Sunset";
+      case "wildlife":
+        return "Wildlife";
+      case "aerial":
+        return "Aerial";
+      default:
+        return "General";
     }
   };
 
@@ -142,7 +160,7 @@ const GalleryPage: React.FC = () => {
     return (
       <div className="min-h-screen pt-20">
         {/* Hero Section Skeleton */}
-        <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600">
+        <section className="py-20 bg-transparent">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="animate-pulse">
               <div className="h-12 bg-white/20 rounded w-96 mx-auto mb-4"></div>
@@ -170,13 +188,7 @@ const GalleryPage: React.FC = () => {
   return (
     <div className="min-h-screen pt-20">
       {/* Hero Section */}
-      <section className="relative py-20 text-white overflow-hidden min-h-[90vh] md:min-h-[110vh] flex items-center justify-center">
-        <img
-          src={admin?.portada_galeria || '/2.webp'}
-          alt="Roatan Robert Tours Gallery"
-          className="absolute inset-0 w-full h-full object-cover object-center z-0"
-          style={{ filter: "brightness(0.7)" }}
-        />
+      <section className="relative py-20 bg-transparent text-white overflow-hidden min-h-[90vh] md:min-h-[110vh] flex items-center justify-center">
         <div className="absolute inset-0 bg-black/30 z-10"></div>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
           <div className="text-center max-w-4xl mx-auto">
@@ -187,14 +199,15 @@ const GalleryPage: React.FC = () => {
               {t.gallery.subtitle}
             </p>
             <div className="text-lg">
-              <span className="font-semibold">{galleryItems.length}</span> amazing photos from our adventures
+              <span className="font-semibold">{galleryItems.length}</span>{" "}
+              amazing photos from our adventures
             </div>
           </div>
         </div>
       </section>
 
       {/* Results Count */}
-      <section className="py-8 bg-white shadow-sm">
+      <section className="py-8 bg-transparent">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mt-4 text-center text-gray-600">
             Showing {galleryItems.length} photos
@@ -203,7 +216,7 @@ const GalleryPage: React.FC = () => {
       </section>
 
       {/* Gallery Grid */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-transparent">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {galleryItems.length === 0 ? (
             <div className="text-center py-16">
@@ -226,7 +239,7 @@ const GalleryPage: React.FC = () => {
                     setLightboxImages(imgs);
                     setLightboxIndex(0);
                     setLightboxOpen(true);
-                    document.body.style.overflow = 'hidden';
+                    document.body.style.overflow = "hidden";
                   }}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
@@ -259,7 +272,7 @@ const GalleryPage: React.FC = () => {
                           item.category || "general"
                         )}`}
                       >
-                        {getCategoryLabel(item.category || 'general')}
+                        {getCategoryLabel(item.category || "general")}
                       </span>
                     </div>
 
@@ -297,7 +310,10 @@ const GalleryPage: React.FC = () => {
         >
           {/* Close Button */}
           <button
-            onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              closeLightbox();
+            }}
             className="absolute top-4 right-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
           >
             <X className="w-6 h-6" />
@@ -309,7 +325,7 @@ const GalleryPage: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex(i => Math.max(0, i - 1));
+                  setLightboxIndex((i) => Math.max(0, i - 1));
                 }}
                 className="absolute left-4 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >
@@ -319,7 +335,9 @@ const GalleryPage: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex(i => Math.min(lightboxImages.length - 1, i + 1));
+                  setLightboxIndex((i) =>
+                    Math.min(lightboxImages.length - 1, i + 1)
+                  );
                 }}
                 className="absolute right-16 z-10 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200"
               >

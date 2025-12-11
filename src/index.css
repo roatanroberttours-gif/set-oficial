@@ -29,6 +29,11 @@
   }
 }
 
+/* Force page background transparent so fixed video is visible */
+body {
+  background-color: transparent;
+}
+
 img {
   object-position: top;
 }

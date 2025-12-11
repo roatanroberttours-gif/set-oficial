@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Clock,
-  Users,
-  Star,
-  ArrowRight,
-  Calendar,
-  Search,
-} from "lucide-react";
+import { Clock, Users, Star, ArrowRight, Calendar, Search } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
@@ -83,8 +76,7 @@ const ServicesPage: React.FC = () => {
     if (selectedCategory !== "all") {
       filtered = filtered.filter(
         (t) =>
-          (t.category || "").toLowerCase() ===
-          selectedCategory.toLowerCase()
+          (t.category || "").toLowerCase() === selectedCategory.toLowerCase()
       );
     }
 
@@ -155,7 +147,7 @@ const ServicesPage: React.FC = () => {
     return (
       <div className="min-h-screen pt-20">
         {/* Skeleton */}
-        <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600">
+        <section className="py-20 bg-transparent">
           <div className="container mx-auto px-4 text-center animate-pulse">
             <div className="h-12 bg-white/20 rounded w-96 mx-auto mb-4"></div>
             <div className="h-6 bg-white/20 rounded w-2/3 mx-auto"></div>
@@ -168,7 +160,7 @@ const ServicesPage: React.FC = () => {
   return (
     <div className="min-h-screen pt-20">
       {/* Header */}
-      <section className="py-20 bg-gradient-to-br from-teal-500 to-blue-600 text-white relative">
+      <section className="py-20 bg-transparent text-white relative">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             {t.services.title}
@@ -177,9 +169,8 @@ const ServicesPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-transparent">
         <div className="container mx-auto px-4">
-
           {/* === FILTROS Y BÚSQUEDA === */}
           <div className="mb-10">
             {/* Barra de búsqueda */}
@@ -195,9 +186,7 @@ const ServicesPage: React.FC = () => {
             </div>
 
             {/* Categorías */}
-            <div className="flex gap-3 justify-center flex-wrap">
-           
-            </div>
+            <div className="flex gap-3 justify-center flex-wrap"></div>
           </div>
 
           {/* Si no hay tours */}
