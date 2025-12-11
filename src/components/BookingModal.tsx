@@ -3,6 +3,7 @@ import { X, Calendar, Users, CreditCard, Clock, MapPin } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour, BookingForm } from "../types";
 import { useSupabaseSet } from '../hooks/supabaseset';
+import { formatTextToHtml } from "../lib/formatText";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -232,9 +233,10 @@ const BookingModal: React.FC<BookingModalProps> = ({
                       <h3 className="font-semibold text-gray-800">
                         {selectedTourData.name}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {selectedTourData.description}
-                      </p>
+                      <div
+                        className="text-sm text-gray-600 mt-1"
+                        dangerouslySetInnerHTML={{ __html: formatTextToHtml(selectedTourData.description) }}
+                      />
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                         <span className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />

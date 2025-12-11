@@ -9,6 +9,7 @@ import Contact from "../components/Contact";
 import TripAdvisorWidget from "../components/TripAdvisorWidget";
 import FacebookWidget from "../components/FacebookWidget";
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 const Home: React.FC = () => {
   const client = useSupabaseSet();
@@ -68,9 +69,7 @@ const Home: React.FC = () => {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2">{tour.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {tour.description}
-                  </p>
+                  <div className="text-gray-600 mb-4 line-clamp-2" dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }} />
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-teal-600 font-semibold">
                       From ${tour.price_1_person}/person

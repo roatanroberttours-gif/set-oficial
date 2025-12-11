@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { GalleryItem } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 // We'll read admin.portada_galeria to show as the gallery hero background
 
@@ -258,9 +259,7 @@ const GalleryPage: React.FC = () => {
                           {item.title}
                         </h3>
                         {item.description && (
-                          <p className="text-gray-200 text-xs line-clamp-2">
-                            {item.description}
-                          </p>
+                          <div className="text-gray-200 text-xs line-clamp-2" dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }} />
                         )}
                       </div>
                     </div>

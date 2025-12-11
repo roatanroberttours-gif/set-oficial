@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatTextToHtml } from "../lib/formatText";
 import { Clock, DollarSign, Users, CheckCircle } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useSupabaseSet } from "../hooks/supabaseset";
@@ -130,7 +131,10 @@ const PrivateTour: React.FC = () => {
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">
                     {tour.title}
                   </h3>
-                  <p className="text-gray-600 mb-4">{tour.description}</p>
+                  <div
+                    className="text-gray-600 mb-4"
+                    dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                  />
 
                   {/* Pricing Info */}
                   <div className="bg-teal-50 rounded-lg p-4 mb-4">

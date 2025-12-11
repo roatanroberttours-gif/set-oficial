@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatTextToHtml } from "../lib/formatText";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -448,9 +449,10 @@ const ServiceDetailPage: React.FC = () => {
               <div className="p-8">
                 {activeTab === "description" && (
                   <div className="space-y-6">
-                    <p className="text-gray-700 leading-relaxed text-lg">
-                      {tour.description}
-                    </p>
+                    <div
+                      className="text-gray-700 leading-relaxed text-lg"
+                      dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                       <div className="flex items-start p-4 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-100">
                         <div className="p-3 bg-white rounded-lg shadow-sm mr-4">
@@ -651,10 +653,7 @@ const ServiceDetailPage: React.FC = () => {
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-start">
-                    <Check className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-green-800 font-medium">Free cancellation up to 24 hours before</span>
-                  </div>
+               
                   <div className="flex items-start">
                     <Check className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
                     <span className="text-green-800 font-medium">Certified and experienced guides</span>

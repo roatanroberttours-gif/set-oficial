@@ -4,6 +4,7 @@ import { ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { GalleryItem } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 const Gallery: React.FC = () => {
   const { t } = useLanguage();
@@ -171,9 +172,7 @@ const Gallery: React.FC = () => {
                       {item.title}
                     </h3>
                     {item.description && (
-                      <p className="text-gray-200 text-sm">
-                        {item.description}
-                      </p>
+                      <div className="text-gray-200 text-sm" dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }} />
                     )}
                   </div>
                 </div>

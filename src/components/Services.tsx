@@ -5,6 +5,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
 import BookingModal from "./BookingModal";
+import { formatTextToHtml } from "../lib/formatText";
 
 const Services: React.FC = () => {
   const { t } = useLanguage();
@@ -172,9 +173,10 @@ const Services: React.FC = () => {
                   {tour.name}
                 </h3>
 
-                <p className="text-gray-600 mb-4 line-clamp-2">
-                  {tour.description}
-                </p>
+                <div
+                  className="text-gray-600 mb-4 line-clamp-2"
+                  dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                />
 
                 {/* Tour Details */}
                 <div className="space-y-2 mb-6">

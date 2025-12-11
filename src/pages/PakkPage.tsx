@@ -2,6 +2,7 @@ import { useEffect, useState, ChangeEvent } from "react";
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, X, Save, Upload, Image as ImageIcon, DollarSign, Clock, Users, Tag, AlertCircle, CheckCircle } from 'lucide-react';
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 export type Pakk = {
   id?: number;
@@ -43,6 +44,8 @@ export default function PakkPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [includedItems, setIncludedItems] = useState<string[]>([]);
+  const [newIncluded, setNewIncluded] = useState<string>('');
 
   useEffect(() => {
     loadPakk();
@@ -77,6 +80,8 @@ export default function PakkPage() {
       precio_por_persona: undefined,
       max_personas: undefined,
     });
+    setIncludedItems([]);
+    setNewIncluded('');
     setImages(Array(10).fill(null));
     setModalOpen(true);
     setError(null);
@@ -86,6 +91,19 @@ export default function PakkPage() {
   const openEditModal = (paq: Pakk) => {
     setEditMode(true);
     setCurrentPakk({ ...paq });
+    // initialize included items from stored string (might be JSON or space-separated)
+    try {
+      if (paq.incluye) {
+        const parsed = JSON.parse(paq.incluye);
+        if (Array.isArray(parsed)) setIncludedItems(parsed.map(String));
+        else setIncludedItems(getIncluyeArray(String(paq.incluye)));
+      } else {
+        setIncludedItems([]);
+      }
+    } catch (e) {
+      setIncludedItems(getIncluyeArray(paq.incluye || ''));
+    }
+    setNewIncluded('');
     setImages(Array(10).fill(null));
     setModalOpen(true);
     setError(null);
@@ -102,6 +120,8 @@ export default function PakkPage() {
       categoria: '',
     });
     setImages(Array(10).fill(null));
+    setIncludedItems([]);
+    setNewIncluded('');
     setError(null);
     setSuccess(null);
   };
@@ -153,7 +173,7 @@ export default function PakkPage() {
         descripcion: currentPakk.descripcion,
         duracion: currentPakk.duracion,
         categoria: currentPakk.categoria || null,
-        incluye: JSON.stringify(getIncluyeArray(currentPakk.incluye)),
+        incluye: JSON.stringify(includedItems),
         precio_por_persona: currentPakk.precio_por_persona || null,
         max_personas: currentPakk.max_personas || null,
       };
@@ -299,12 +319,13 @@ export default function PakkPage() {
                         {getCategoryLabel(paq.categoria)}
                       </span>
                     </div>
+                    
                   </div>
 
                   {/* Content */}
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">{paq.titulo}</h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{paq.descripcion}</p>
+                    <div className="text-gray-600 text-sm mb-4 line-clamp-3" dangerouslySetInnerHTML={{ __html: formatTextToHtml(paq.descripcion) }} />
 
                     {/* Details */}
                     <div className="space-y-2 mb-4">
@@ -447,6 +468,11 @@ export default function PakkPage() {
                       placeholder="Describe your tour package..."
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors resize-none"
                     />
+                    {/* Live preview */}
+                    <div className="mt-3">
+                      <div className="text-sm font-semibold text-gray-700 mb-2">Preview</div>
+                      <div className="prose max-w-none p-4 bg-gray-50 border rounded-lg text-gray-800" dangerouslySetInnerHTML={{ __html: formatTextToHtml(currentPakk.descripcion) }} />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -501,22 +527,54 @@ export default function PakkPage() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      What's Included? <span className="text-gray-500 font-normal">(Separate with double spaces)</span>
+                      What's Included?
                     </label>
-                    <textarea
-                      name="incluye"
-                      value={currentPakk.incluye}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="Equipment  Guide  Snacks  Transportation"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors resize-none"
-                    />
-                    {getIncluyeArray(currentPakk.incluye).length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {getIncluyeArray(currentPakk.incluye).map((item, i) => (
-                          <span key={i} className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm">
-                            ✓ {item}
-                          </span>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newIncluded}
+                        onChange={(e) => setNewIncluded(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const v = newIncluded.trim();
+                            if (v) {
+                              setIncludedItems((prev) => [...prev, v]);
+                              setNewIncluded('');
+                            }
+                          }
+                        }}
+                        placeholder="Add an item e.g. Snacks"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const v = newIncluded.trim();
+                          if (!v) return;
+                          setIncludedItems((prev) => [...prev, v]);
+                          setNewIncluded('');
+                        }}
+                        className="px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {includedItems.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {includedItems.map((item, i) => (
+                          <div key={i} className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                            <span>✓ {item}</span>
+                            <button
+                              type="button"
+                              onClick={() => setIncludedItems((prev) => prev.filter((_, idx) => idx !== i))}
+                              className="text-gray-500 hover:text-gray-800 ml-2"
+                              aria-label={`Remove ${item}`}
+                            >
+                              ✕
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}

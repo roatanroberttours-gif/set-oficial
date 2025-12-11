@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatTextToHtml } from "../lib/formatText";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, DollarSign, CheckCircle, ArrowLeft, Users } from "lucide-react";
 import { useSupabaseSet } from "../hooks/supabaseset";
@@ -214,9 +215,10 @@ const PrivateTourDetail: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               {tour.title}
             </h1>
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              {tour.description}
-            </p>
+            <div
+              className="text-lg text-gray-600 mb-6 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+            />
 
             {/* Pricing */}
             <div className="bg-teal-50 rounded-xl p-6 mb-6">

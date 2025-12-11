@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 export type Paquete = {
   id?: number;
@@ -61,7 +62,7 @@ export default function PaquetesPage() {
               </div>
               <h2 className="text-xl font-semibold mb-2">{paq.titulo}</h2>
               <div className="mb-1"><span className="font-bold">Incluye:</span> {paq.incluye}</div>
-              <div className="mb-1"><span className="font-bold">Descripción:</span> {paq.descripcion}</div>
+              <div className="mb-1"><span className="font-bold">Descripción:</span> <span dangerouslySetInnerHTML={{ __html: formatTextToHtml(paq.descripcion) }} /></div>
               <div className="mb-1"><span className="font-bold">Duración:</span> {paq.duracion}</div>
             </div>
           ))}

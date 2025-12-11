@@ -10,6 +10,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { useSupabaseSet } from "../hooks/supabaseset";
+import { formatTextToHtml } from "../lib/formatText";
 
 interface PrivateTour {
   id?: number;
@@ -234,9 +235,10 @@ const AdminPrivateTours: React.FC = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
                   {tour.title}
                 </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {tour.description}
-                </p>
+                <div
+                  className="text-gray-600 text-sm mb-4 line-clamp-2"
+                  dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                />
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-teal-600 font-semibold">
                     From ${tour.price_1_person}/person
@@ -316,6 +318,11 @@ const AdminPrivateTours: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Enter tour description"
               />
+              {/* Live preview for description */}
+              <div className="mt-3">
+                <div className="text-sm font-semibold text-gray-700 mb-2">Preview</div>
+                <div className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800" dangerouslySetInnerHTML={{ __html: formatTextToHtml(editingTour.description) }} />
+              </div>
             </div>
 
             {/* Images */}
@@ -479,6 +486,10 @@ const AdminPrivateTours: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="List what's included in the tour"
               />
+              <div className="mt-3">
+                <div className="text-sm font-semibold text-gray-700 mb-2">Preview (Included)</div>
+                <div className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800" dangerouslySetInnerHTML={{ __html: formatTextToHtml(editingTour.whats_included) }} />
+              </div>
             </div>
 
             <div>
