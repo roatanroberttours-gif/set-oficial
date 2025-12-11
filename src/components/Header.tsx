@@ -175,7 +175,11 @@ const Header: React.FC = () => {
                     </Link>
                     
                     {servicesDropdownOpen && tours.length > 0 && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]">
+                      <div
+                        className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
+                        onMouseEnter={() => setServicesDropdownOpen(true)}
+                        onMouseLeave={() => setServicesDropdownOpen(false)}
+                      >
                         <div className="py-2 max-h-96 overflow-y-auto">
                           {tours.map((tour) => (
                             <Link
@@ -184,7 +188,7 @@ const Header: React.FC = () => {
                               className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors duration-200 text-sm font-medium border-b border-gray-50 last:border-0"
                               onClick={() => setServicesDropdownOpen(false)}
                             >
-                              {tour.titulo}
+                              {tour.titulo || tour.title}
                             </Link>
                           ))}
                         </div>
@@ -213,7 +217,11 @@ const Header: React.FC = () => {
                     </Link>
                     
                     {privateTourDropdownOpen && privateTours.length > 0 && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]">
+                      <div
+                        className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
+                        onMouseEnter={() => setPrivateTourDropdownOpen(true)}
+                        onMouseLeave={() => setPrivateTourDropdownOpen(false)}
+                      >
                         <div className="py-2 max-h-96 overflow-y-auto">
                           {privateTours.map((tour) => (
                             <Link
@@ -222,7 +230,7 @@ const Header: React.FC = () => {
                               className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors duration-200 text-sm font-medium border-b border-gray-50 last:border-0"
                               onClick={() => setPrivateTourDropdownOpen(false)}
                             >
-                              {tour.title}
+                              {tour.titulo || tour.title}
                             </Link>
                           ))}
                         </div>
