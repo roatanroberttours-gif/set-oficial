@@ -131,10 +131,11 @@ const PrivateTour: React.FC = () => {
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">
                     {tour.title}
                   </h3>
-                  <div
-                    className="text-gray-600 mb-4"
-                    dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
-                  />
+                  <div className="text-gray-600 mb-4 line-clamp-3">
+                    {tour.description.length > 150 
+                      ? `${tour.description.substring(0, 150)}...` 
+                      : tour.description}
+                  </div>
 
                   {/* Pricing Info */}
                   <div className="bg-teal-50 rounded-lg p-4 mb-4">
@@ -200,13 +201,6 @@ const PrivateTour: React.FC = () => {
                     <div className="flex items-center text-gray-600 mb-4">
                       <Clock className="w-5 h-5 text-teal-600 mr-2" />
                       <span className="text-sm">{tour.duration}</span>
-                    </div>
-                  )}
-
-                  {/* Tour Notes */}
-                  {tour.tour_notes && (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                      <p className="text-sm text-gray-700">{tour.tour_notes}</p>
                     </div>
                   )}
 
