@@ -10,51 +10,74 @@ const Header: React.FC = () => {
   const location = useLocation();
   const client = useSupabaseSet();
   const [admin, setAdmin] = useState<any | null>(null);
-  const baseLogo = `${import.meta.env.BASE_URL ?? '/'}logo.webp`;
-  const [logoSrc, setLogoSrc] = useState<string>(baseLogo);
+  const base = import.meta.env.BASE_URL ?? "/";
+  const candidateLogos = [
+    `${base}logo.webp`,
+    `${base}images/logo.webp`,
+    `/logo.webp`,
+    `/images/logo.webp`,
+  ];
+  const [logoSrc, setLogoSrc] = useState<string>(candidateLogos[0]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const { data, error } = await client.from('admin').select('*').maybeSingle();
+        const { data, error } = await client
+          .from("admin")
+          .select("*")
+          .maybeSingle();
         if (error) throw error;
         if (mounted) setAdmin(data || null);
       } catch (err) {
-        console.error('Error loading admin for header:', err);
+        console.error("Error loading admin for header:", err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [client]);
 
   // When admin.logo is available it might be a remote signed URL that takes
   // time to resolve. Preload it and fall back to a local asset that works
   // regardless of deployment base path.
   useEffect(() => {
-    if (!admin?.logo) {
-      setLogoSrc(baseLogo);
-      return;
-    }
     let cancelled = false;
-    const img = new Image();
-    img.src = admin.logo;
-    img.onload = () => {
-      if (!cancelled) setLogoSrc(admin.logo);
+
+    const setIfNotCancelled = (src: string) => {
+      if (!cancelled) setLogoSrc(src);
     };
-    img.onerror = () => {
-      if (!cancelled) setLogoSrc(baseLogo);
+
+    // Try admin.logo first (if present), then try candidate public paths in order.
+    const tryLoad = (srcs: string[]) => {
+      if (srcs.length === 0) return;
+      const src = srcs[0];
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setIfNotCancelled(src);
+      img.onerror = () => tryLoad(srcs.slice(1));
     };
-    return () => { cancelled = true; };
-  }, [admin?.logo, baseLogo]);
+
+    if (admin?.logo) {
+      const imgAdmin = new Image();
+      imgAdmin.src = admin.logo;
+      imgAdmin.onload = () => setIfNotCancelled(admin.logo);
+      imgAdmin.onerror = () => tryLoad(candidateLogos);
+    } else {
+      tryLoad(candidateLogos);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [admin?.logo]);
 
   // Header is always visible and opaque; no scroll detection needed
-
-  
 
   const navItems = [
     { key: "home", href: "/", label: t.nav.home },
     { key: "services", href: "/services", label: t.nav.services },
-    { key: "private-tour", href: "/private-tour", label: 'Private Tour' },
+    { key: "private-tour", href: "/private-tour", label: "Private Tour" },
     { key: "gallery", href: "/gallery", label: t.nav.gallery },
     { key: "contact", href: "/contact", label: t.nav.contact },
   ];
@@ -71,7 +94,9 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md shadow-lg`}>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md shadow-lg`}
+    >
       <div className="container mx-auto px-6 sm:px-6 lg:px-10">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -82,15 +107,14 @@ const Header: React.FC = () => {
           >
             <img
               src={logoSrc}
-              alt={`${admin?.nombre_web ?? 'Roatan Robert Tours'} Logo`}
+              alt={`${admin?.nombre_web ?? "Roatan Robert Tours"} Logo`}
               className="w-19 h-11 rounded-full shadow-lg border-9 border-white bg-white object-cover group-hover:scale-110 transition-transform duration-200"
               style={{ background: "white" }}
             />
             <div className="hidden sm:block">
               <h1 className={`font-bold text-lg text-gray-800`}>
-                {admin?.nombre_web ?? 'Roatan Robert Tours'}
+                {admin?.nombre_web ?? "Roatan Robert Tours"}
               </h1>
-
             </div>
           </Link>
 
@@ -100,7 +124,9 @@ const Header: React.FC = () => {
               <Link
                 key={item.key}
                 to={item.href}
-                className={`font-medium transition-colors duration-200 hover:text-teal-500 ${isActivePath(item.href) ? "text-teal-500" : "text-gray-800"}`}
+                className={`font-medium transition-colors duration-200 hover:text-teal-500 ${
+                  isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                }`}
               >
                 {item.label}
               </Link>
