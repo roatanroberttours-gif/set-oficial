@@ -233,20 +233,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
                       <h3 className="font-semibold text-gray-800">
                         {selectedTourData.name}
                       </h3>
-                      <div
-                        className="text-sm text-gray-600 mt-1"
-                        dangerouslySetInnerHTML={{ __html: formatTextToHtml(selectedTourData.description) }}
-                      />
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {selectedTourData.duration}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          Roatán Este
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </div>
