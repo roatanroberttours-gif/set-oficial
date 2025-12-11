@@ -83,20 +83,22 @@ const Header: React.FC = () => {
         // Load regular tours (paquetes)
         const { data: toursData, error: toursError } = await client
           .from("paquetes")
-          .select("id, titulo")
-          .order("id", { ascending: true })
-          .limit(10);
+          .select("*")
+          .order("id", { ascending: true });
         if (toursError) throw toursError;
         if (mounted) setTours(toursData || []);
 
-        // Load private tours
+        // Load private tours (same as PrivateTour.tsx page)
         const { data: privateData, error: privateError } = await client
           .from("private_tours")
-          .select("id, title")
-          .order("id", { ascending: true })
-          .limit(10);
+          .select("*")
+          .order("id", { ascending: true });
         if (privateError) throw privateError;
         if (mounted) setPrivateTours(privateData || []);
+
+        // Debug logs to verify data loading
+        console.log("Header: loaded paquetes:", toursData?.length || 0);
+        console.log("Header: loaded private_tours:", privateData?.length || 0);
       } catch (err) {
         console.error("Error loading tours for header dropdown:", err);
       }
@@ -204,11 +206,14 @@ const Header: React.FC = () => {
                   >
                     <Link
                       to={item.href}
-                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-1 ${
+                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-2 ${
                         isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
                       }`}
                     >
-                      {item.label}
+                      <span className="flex items-center gap-2">
+                        <span>{item.label}</span>
+                        <span className="text-xs text-gray-500">({tours.length})</span>
+                      </span>
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
                     </Link>
                     
@@ -251,11 +256,14 @@ const Header: React.FC = () => {
                   >
                     <Link
                       to={item.href}
-                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-1 ${
+                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-2 ${
                         isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
                       }`}
                     >
-                      {item.label}
+                      <span className="flex items-center gap-2">
+                        <span>{item.label}</span>
+                        <span className="text-xs text-gray-500">({privateTours.length})</span>
+                      </span>
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
                     </Link>
                     
