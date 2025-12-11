@@ -59,7 +59,7 @@ const Header: React.FC = () => {
             onClick={() => setIsMenuOpen(false)}
           >
             <img
-              src={'/logo.webp'}
+              src={'./logo.webp'}
               alt={`${admin?.nombre_web ?? 'Roatan Robert Tours'} Logo`}
               className="w-19 h-11 rounded-full shadow-lg border-9 border-white bg-white object-cover group-hover:scale-110 transition-transform duration-200"
               style={{ background: "white" }}
