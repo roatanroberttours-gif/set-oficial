@@ -4,7 +4,6 @@ import { Clock, Users, Star, ArrowRight, Calendar, Search } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
-import BookingModal from "../components/BookingModal";
 import { formatTextToHtml } from "../lib/formatText";
 
 const ServicesPage: React.FC = () => {
@@ -12,8 +11,8 @@ const ServicesPage: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  // Booking now handled from service detail page; removed modal from list view
   const [selectedTour, setSelectedTour] = useState<Tour | undefined>();
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -94,10 +93,7 @@ const ServicesPage: React.FC = () => {
     setFilteredTours(filtered);
   };
 
-  const handleBookNow = (tour: Tour) => {
-    setSelectedTour(tour);
-    setShowBookingModal(true);
-  };
+  // booking flow starts from detail page
 
   const categories = [
     { value: "all", label: "Todos los Tours", count: tours.length },
@@ -255,12 +251,7 @@ const ServicesPage: React.FC = () => {
                         {t.services.viewDetails}
                       </Link>
 
-                      <button
-                        onClick={() => handleBookNow(tour)}
-                        className="flex-1 px-4 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg"
-                      >
-                        {t.services.bookNow}
-                      </button>
+                      {/* Book Now removed from cards; booking initiated on detail page */}
                     </div>
                   </div>
                 </div>
@@ -269,14 +260,7 @@ const ServicesPage: React.FC = () => {
           )}
         </div>
       </section>
-
-      {showBookingModal && (
-        <BookingModal
-          isOpen={showBookingModal}
-          onClose={() => setShowBookingModal(false)}
-          selectedTour={selectedTour}
-        />
-      )}
+      
     </div>
   );
 };
