@@ -779,19 +779,7 @@ const ServiceDetailPage: React.FC = () => {
                 </div>
 
                 {/* Additional Info */}
-                <div className="mt-8 pt-6 border-t-2 border-gray-200">
-                  <div className="flex items-start bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                    <div className="p-2 bg-blue-100 rounded-lg mr-3 flex-shrink-0">
-                      <span className="text-2xl">ℹ️</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-blue-900 mb-1">Pickup Service</h4>
-                      <p className="text-blue-800 text-sm">
-                        Transportation from your hotel is included. We will contact you after booking to arrange the most convenient pickup point for you.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+             
               </div>
             </div>
           </div>
