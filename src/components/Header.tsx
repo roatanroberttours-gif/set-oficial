@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -22,6 +22,39 @@ const Header: React.FC = () => {
     `/images/logo.webp`,
   ];
   const [logoSrc, setLogoSrc] = useState<string>(candidateLogos[0]);
+  const servicesCloseTimer = useRef<number | null>(null);
+  const privateCloseTimer = useRef<number | null>(null);
+
+  const scheduleCloseServices = (ms = 300) => {
+    if (servicesCloseTimer.current) window.clearTimeout(servicesCloseTimer.current);
+    servicesCloseTimer.current = window.setTimeout(() => setServicesDropdownOpen(false), ms);
+  };
+
+  const cancelCloseServices = () => {
+    if (servicesCloseTimer.current) {
+      window.clearTimeout(servicesCloseTimer.current);
+      servicesCloseTimer.current = null;
+    }
+  };
+
+  const scheduleClosePrivate = (ms = 300) => {
+    if (privateCloseTimer.current) window.clearTimeout(privateCloseTimer.current);
+    privateCloseTimer.current = window.setTimeout(() => setPrivateTourDropdownOpen(false), ms);
+  };
+
+  const cancelClosePrivate = () => {
+    if (privateCloseTimer.current) {
+      window.clearTimeout(privateCloseTimer.current);
+      privateCloseTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (servicesCloseTimer.current) window.clearTimeout(servicesCloseTimer.current);
+      if (privateCloseTimer.current) window.clearTimeout(privateCloseTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -161,8 +194,13 @@ const Header: React.FC = () => {
                   <div
                     key={item.key}
                     className="relative group"
-                    onMouseEnter={() => setServicesDropdownOpen(true)}
-                    onMouseLeave={() => setServicesDropdownOpen(false)}
+                    onMouseEnter={() => {
+                      cancelCloseServices();
+                      setServicesDropdownOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      scheduleCloseServices(350);
+                    }}
                   >
                     <Link
                       to={item.href}
@@ -177,8 +215,8 @@ const Header: React.FC = () => {
                     {servicesDropdownOpen && tours.length > 0 && (
                       <div
                         className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
-                        onMouseEnter={() => setServicesDropdownOpen(true)}
-                        onMouseLeave={() => setServicesDropdownOpen(false)}
+                        onMouseEnter={() => cancelCloseServices()}
+                        onMouseLeave={() => scheduleCloseServices(350)}
                       >
                         <div className="py-2 max-h-96 overflow-y-auto">
                           {tours.map((tour) => (
@@ -203,8 +241,13 @@ const Header: React.FC = () => {
                   <div
                     key={item.key}
                     className="relative group"
-                    onMouseEnter={() => setPrivateTourDropdownOpen(true)}
-                    onMouseLeave={() => setPrivateTourDropdownOpen(false)}
+                    onMouseEnter={() => {
+                      cancelClosePrivate();
+                      setPrivateTourDropdownOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      scheduleClosePrivate(350);
+                    }}
                   >
                     <Link
                       to={item.href}
@@ -219,8 +262,8 @@ const Header: React.FC = () => {
                     {privateTourDropdownOpen && privateTours.length > 0 && (
                       <div
                         className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
-                        onMouseEnter={() => setPrivateTourDropdownOpen(true)}
-                        onMouseLeave={() => setPrivateTourDropdownOpen(false)}
+                        onMouseEnter={() => cancelClosePrivate()}
+                        onMouseLeave={() => scheduleClosePrivate(350)}
                       >
                         <div className="py-2 max-h-96 overflow-y-auto">
                           {privateTours.map((tour) => (
