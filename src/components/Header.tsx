@@ -236,10 +236,7 @@ const Header: React.FC = () => {
                         isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
                       }`}
                     >
-                      <span className="flex items-center gap-2">
-                        <span>{item.label}</span>
-                        <span className="text-xs text-gray-500">({tours.length})</span>
-                      </span>
+                      {item.label}
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
                     </Link>
                     
@@ -286,10 +283,7 @@ const Header: React.FC = () => {
                         isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
                       }`}
                     >
-                      <span className="flex items-center gap-2">
-                        <span>{item.label}</span>
-                        <span className="text-xs text-gray-500">({privateTours.length})</span>
-                      </span>
+                      {item.label}
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
                     </Link>
                     
