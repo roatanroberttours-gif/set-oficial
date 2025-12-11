@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [privateTourDropdownOpen, setPrivateTourDropdownOpen] = useState(false);
   const { t } = useLanguage();
   const location = useLocation();
   const client = useSupabaseSet();
   const [admin, setAdmin] = useState<any | null>(null);
+  const [tours, setTours] = useState<any[]>([]);
+  const [privateTours, setPrivateTours] = useState<any[]>([]);
   const base = import.meta.env.BASE_URL ?? "/";
   const candidateLogos = [
     `${base}logo.webp`,
@@ -31,6 +35,37 @@ const Header: React.FC = () => {
         if (mounted) setAdmin(data || null);
       } catch (err) {
         console.error("Error loading admin for header:", err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [client]);
+
+  // Load tours for dropdown menus
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // Load regular tours (paquetes)
+        const { data: toursData, error: toursError } = await client
+          .from("paquetes")
+          .select("id, titulo")
+          .order("id", { ascending: true })
+          .limit(10);
+        if (toursError) throw toursError;
+        if (mounted) setTours(toursData || []);
+
+        // Load private tours
+        const { data: privateData, error: privateError } = await client
+          .from("private_tours")
+          .select("id, title")
+          .order("id", { ascending: true })
+          .limit(10);
+        if (privateError) throw privateError;
+        if (mounted) setPrivateTours(privateData || []);
+      } catch (err) {
+        console.error("Error loading tours for header dropdown:", err);
       }
     })();
     return () => {
@@ -76,8 +111,8 @@ const Header: React.FC = () => {
 
   const navItems = [
     { key: "home", href: "/", label: t.nav.home },
-    { key: "services", href: "/services", label: t.nav.services },
-    { key: "private-tour", href: "/private-tour", label: "Private Tour" },
+    { key: "services", href: "/services", label: t.nav.services, hasDropdown: true },
+    { key: "private-tour", href: "/private-tour", label: "Private Tour", hasDropdown: true },
     { key: "gallery", href: "/gallery", label: t.nav.gallery },
     { key: "contact", href: "/contact", label: t.nav.contact },
   ];
@@ -120,17 +155,95 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.key}
-                to={item.href}
-                className={`font-medium transition-colors duration-200 hover:text-teal-500 ${
-                  isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              if (item.key === "services" && item.hasDropdown) {
+                return (
+                  <div
+                    key={item.key}
+                    className="relative group"
+                    onMouseEnter={() => setServicesDropdownOpen(true)}
+                    onMouseLeave={() => setServicesDropdownOpen(false)}
+                  >
+                    <Link
+                      to={item.href}
+                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-1 ${
+                        isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
+                    </Link>
+                    
+                    {servicesDropdownOpen && tours.length > 0 && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-50">
+                        <div className="py-2">
+                          {tours.map((tour) => (
+                            <Link
+                              key={tour.id}
+                              to={`/service/${tour.id}`}
+                              className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors duration-200 text-sm font-medium border-b border-gray-50 last:border-0"
+                              onClick={() => setServicesDropdownOpen(false)}
+                            >
+                              {tour.titulo}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              if (item.key === "private-tour" && item.hasDropdown) {
+                return (
+                  <div
+                    key={item.key}
+                    className="relative group"
+                    onMouseEnter={() => setPrivateTourDropdownOpen(true)}
+                    onMouseLeave={() => setPrivateTourDropdownOpen(false)}
+                  >
+                    <Link
+                      to={item.href}
+                      className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-1 ${
+                        isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
+                    </Link>
+                    
+                    {privateTourDropdownOpen && privateTours.length > 0 && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-50">
+                        <div className="py-2">
+                          {privateTours.map((tour) => (
+                            <Link
+                              key={tour.id}
+                              to={`/private-tour/${tour.id}`}
+                              className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors duration-200 text-sm font-medium border-b border-gray-50 last:border-0"
+                              onClick={() => setPrivateTourDropdownOpen(false)}
+                            >
+                              {tour.title}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              return (
+                <Link
+                  key={item.key}
+                  to={item.href}
+                  className={`font-medium transition-colors duration-200 hover:text-teal-500 ${
+                    isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -152,20 +265,98 @@ const Header: React.FC = () => {
         {isMenuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-md rounded-lg shadow-lg mb-4 overflow-hidden">
             <nav className="py-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`block px-6 py-3 font-medium transition-colors duration-200 hover:bg-teal-50 hover:text-teal-600 ${
-                    isActivePath(item.href)
-                      ? "text-teal-600 bg-teal-50"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                if (item.key === "services" && item.hasDropdown) {
+                  return (
+                    <div key={item.key}>
+                      <Link
+                        to={item.href}
+                        onClick={() => {
+                          setServicesDropdownOpen(!servicesDropdownOpen);
+                        }}
+                        className={`flex items-center justify-between px-6 py-3 font-medium transition-colors duration-200 hover:bg-teal-50 hover:text-teal-600 ${
+                          isActivePath(item.href)
+                            ? "text-teal-600 bg-teal-50"
+                            : "text-gray-800"
+                        }`}
+                      >
+                        {item.label}
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
+                      </Link>
+                      {servicesDropdownOpen && tours.length > 0 && (
+                        <div className="bg-gray-50 border-l-4 border-teal-500">
+                          {tours.map((tour) => (
+                            <Link
+                              key={tour.id}
+                              to={`/service/${tour.id}`}
+                              onClick={() => {
+                                setIsMenuOpen(false);
+                                setServicesDropdownOpen(false);
+                              }}
+                              className="block px-10 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                            >
+                              {tour.titulo}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                
+                if (item.key === "private-tour" && item.hasDropdown) {
+                  return (
+                    <div key={item.key}>
+                      <Link
+                        to={item.href}
+                        onClick={() => {
+                          setPrivateTourDropdownOpen(!privateTourDropdownOpen);
+                        }}
+                        className={`flex items-center justify-between px-6 py-3 font-medium transition-colors duration-200 hover:bg-teal-50 hover:text-teal-600 ${
+                          isActivePath(item.href)
+                            ? "text-teal-600 bg-teal-50"
+                            : "text-gray-800"
+                        }`}
+                      >
+                        {item.label}
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
+                      </Link>
+                      {privateTourDropdownOpen && privateTours.length > 0 && (
+                        <div className="bg-gray-50 border-l-4 border-teal-500">
+                          {privateTours.map((tour) => (
+                            <Link
+                              key={tour.id}
+                              to={`/private-tour/${tour.id}`}
+                              onClick={() => {
+                                setIsMenuOpen(false);
+                                setPrivateTourDropdownOpen(false);
+                              }}
+                              className="block px-10 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                            >
+                              {tour.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                
+                return (
+                  <Link
+                    key={item.key}
+                    to={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-6 py-3 font-medium transition-colors duration-200 hover:bg-teal-50 hover:text-teal-600 ${
+                      isActivePath(item.href)
+                        ? "text-teal-600 bg-teal-50"
+                        : "text-gray-800"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         )}
