@@ -85,12 +85,7 @@ const Home: React.FC = () => {
                     >
                       View Details
                     </Link>
-                    <Link
-                      to={`/private-tour/book/${tour.id}`}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg"
-                    >
-                      Book Now
-                    </Link>
+                    {/* Book Now removed from VIP card */}
                   </div>
                 </div>
               </div>

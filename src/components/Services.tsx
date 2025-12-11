@@ -4,7 +4,7 @@ import { Clock, Users, Star, ArrowRight, Calendar } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tour } from "../types";
 import { useSupabaseSet } from "../hooks/supabaseset";
-import BookingModal from "./BookingModal";
+// BookingModal removed from tour cards UI — opening booking kept to detail flow
 import { formatTextToHtml } from "../lib/formatText";
 
 const Services: React.FC = () => {
@@ -12,7 +12,6 @@ const Services: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTour, setSelectedTour] = useState<Tour | undefined>(undefined);
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const client = useSupabaseSet();
 
   useEffect(() => {
@@ -58,10 +57,7 @@ const Services: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleBookNow = (tour: Tour) => {
-    setSelectedTour(tour);
-    setShowBookingModal(true);
-  };
+  // Book Now removed from cards — booking initiated from detail page
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -214,15 +210,7 @@ const Services: React.FC = () => {
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
 
-                  <button
-                    onClick={() => handleBookNow(tour)}
-                    className="flex-1 flex items-center justify-center px-4 py-2 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <Calendar className="w-4 h-4 mr-1" />
-                    <span className="text-sm font-medium">
-                      {t.services.bookNow}
-                    </span>
-                  </button>
+                  {/* Book Now removed from service cards */}
                 </div>
               </div>
             </div>
@@ -241,14 +229,7 @@ const Services: React.FC = () => {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      {showBookingModal && (
-        <BookingModal
-          isOpen={showBookingModal}
-          onClose={() => setShowBookingModal(false)}
-          selectedTour={selectedTour}
-        />
-      )}
+      {/* Booking handled from service detail page; modal removed from cards */}
     </section>
   );
 };
