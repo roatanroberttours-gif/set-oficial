@@ -1,7 +1,22 @@
-
 import React, { useEffect, useState } from "react";
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Save, X, Upload, Mail, Phone, MapPin, Globe, Facebook, Instagram, Image as ImageIcon, Shield, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
+import { Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  Save,
+  X,
+  Upload,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  Facebook,
+  Instagram,
+  Image as ImageIcon,
+  Shield,
+  AlertCircle,
+  CheckCircle,
+  Edit2,
+} from "lucide-react";
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 type AdminRow = {
@@ -26,14 +41,18 @@ export default function AdminPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState<AdminRow | null>(null);
-  const [editFiles, setEditFiles] = useState<Array<File | null>>([null, null, null]);
+  const [editFiles, setEditFiles] = useState<Array<File | null>>([
+    null,
+    null,
+    null,
+  ]);
   const [saving, setSaving] = useState(false);
   const client = useSupabaseSet();
 
   // Admin credentials editor state
-  const [credUsername, setCredUsername] = useState<string>('');
-  const [credPassword, setCredPassword] = useState<string>('');
-  const [credConfirm, setCredConfirm] = useState<string>('');
+  const [credUsername, setCredUsername] = useState<string>("");
+  const [credPassword, setCredPassword] = useState<string>("");
+  const [credConfirm, setCredConfirm] = useState<string>("");
   const [credLoading, setCredLoading] = useState<boolean>(false);
   const [credMessage, setCredMessage] = useState<string | null>(null);
 
@@ -57,16 +76,20 @@ export default function AdminPage() {
 
   const loadCredentials = async () => {
     try {
-      const { data, error } = await client.from('admins').select('*').limit(1).maybeSingle();
+      const { data, error } = await client
+        .from("admins")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
       if (error) {
-        console.warn('Error loading admin credentials:', error.message);
+        console.warn("Error loading admin credentials:", error.message);
         return;
       }
       if (data) {
-        setCredUsername((data as any).username || '');
+        setCredUsername((data as any).username || "");
       }
     } catch (e) {
-      console.warn('Error loading admin credentials', e);
+      console.warn("Error loading admin credentials", e);
     }
   };
 
@@ -92,9 +115,12 @@ export default function AdminPage() {
     setCurrentRow({ ...currentRow, [name]: value });
   };
 
-  const handleFileChange = (slot: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    slot: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0] || null;
-    setEditFiles(prev => {
+    setEditFiles((prev) => {
       const copy = [...prev];
       copy[slot] = file;
       return copy;
@@ -109,34 +135,48 @@ export default function AdminPage() {
 
     try {
       const { id, ...updateData } = currentRow as AdminRow;
-      
+
       // Upload new files (video for slot 0, images for others)
       for (let i = 0; i < editFiles.length; i++) {
         const file = editFiles[i];
         if (file) {
-          const slotName = i === 0 ? 'video_principal' : i === 1 ? 'portada_galeria' : 'logo';
+          const slotName =
+            i === 0 ? "video_principal" : i === 1 ? "portada_galeria" : "logo";
           const filePath = `admin/${Date.now()}_${slotName}_${file.name}`;
-          
-          const uploadResp = await client.storage.from('principal').upload(filePath, file, { upsert: true });
-          if (uploadResp.error) throw new Error('Error uploading file: ' + uploadResp.error.message);
-          
-          const urlResult = client.storage.from('principal').getPublicUrl(filePath);
+
+          const uploadResp = await client.storage
+            .from("principal")
+            .upload(filePath, file, { upsert: true });
+          if (uploadResp.error)
+            throw new Error(
+              "Error uploading file: " + uploadResp.error.message
+            );
+
+          const urlResult = client.storage
+            .from("principal")
+            .getPublicUrl(filePath);
           if (urlResult?.data?.publicUrl) {
             (updateData as any)[slotName] = urlResult.data.publicUrl;
           }
         }
       }
 
-      const { data, error: updErr } = await client.from("admin").update(updateData).eq("id", id).select();
+      const { data, error: updErr } = await client
+        .from("admin")
+        .update(updateData)
+        .eq("id", id)
+        .select();
       if (updErr) throw updErr;
-      
+
       if (data && (data as AdminRow[]).length > 0) {
-        setAdminData(prev => prev.map(row => row.id === id ? data[0] : row));
-        setSuccess('Settings updated successfully!');
+        setAdminData((prev) =>
+          prev.map((row) => (row.id === id ? data[0] : row))
+        );
+        setSuccess("Settings updated successfully!");
         setTimeout(() => closeModal(), 1500);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || "An error occurred");
     } finally {
       setSaving(false);
     }
@@ -145,33 +185,36 @@ export default function AdminPage() {
   const handleSaveCredentials = async () => {
     setCredMessage(null);
     if (!credUsername) {
-      setCredMessage('Username is required');
+      setCredMessage("Username is required");
       return;
     }
     if (credPassword && credPassword !== credConfirm) {
-      setCredMessage('Passwords do not match');
+      setCredMessage("Passwords do not match");
       return;
     }
     setCredLoading(true);
     try {
       let payload: any = { username: credUsername };
       if (credPassword) {
-        const bcrypt = (await import('bcryptjs')).default;
+        const bcrypt = (await import("bcryptjs")).default;
         const hash = await bcrypt.hash(credPassword, 10);
         payload.password_hash = hash;
       }
 
       // Upsert by username
-      const { data, error } = await client.from('admins').upsert([payload]).select();
+      const { data, error } = await client
+        .from("admins")
+        .upsert([payload])
+        .select();
       if (error) {
-        setCredMessage('Error saving credentials: ' + error.message);
+        setCredMessage("Error saving credentials: " + error.message);
       } else {
-        setCredMessage('Credentials saved successfully');
-        setCredPassword('');
-        setCredConfirm('');
+        setCredMessage("Credentials saved successfully");
+        setCredPassword("");
+        setCredConfirm("");
       }
     } catch (e: any) {
-      setCredMessage('Error: ' + String(e?.message || e));
+      setCredMessage("Error: " + String(e?.message || e));
     }
     setCredLoading(false);
   };
@@ -182,12 +225,19 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="p-2 rounded-full bg-white shadow hover:bg-gray-100 transition-colors">
+            <Link
+              to="/admin"
+              className="p-2 rounded-full bg-white shadow hover:bg-gray-100 transition-colors"
+            >
               <ArrowLeft className="w-5 h-5 text-gray-700" />
             </Link>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Site Settings</h1>
-              <p className="text-gray-600 mt-1">Manage your website configuration and content</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Site Settings
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your website configuration and content
+              </p>
             </div>
           </div>
         </div>
@@ -214,52 +264,68 @@ export default function AdminPage() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Admin Credentials</h2>
-              <p className="text-gray-600 text-sm">Update admin access credentials</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Admin Credentials
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Update admin access credentials
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-              <input 
-                value={credUsername} 
-                onChange={e => setCredUsername(e.target.value)} 
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors" 
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Username
+              </label>
+              <input
+                value={credUsername}
+                onChange={(e) => setCredUsername(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
-              <input 
-                type="password" 
-                value={credPassword} 
-                onChange={e => setCredPassword(e.target.value)} 
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors" 
-                placeholder="Leave blank to keep current" 
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={credPassword}
+                onChange={(e) => setCredPassword(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
+                placeholder="Leave blank to keep current"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
-              <input 
-                type="password" 
-                value={credConfirm} 
-                onChange={e => setCredConfirm(e.target.value)} 
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors" 
-                placeholder="Repeat password" 
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={credConfirm}
+                onChange={(e) => setCredConfirm(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
+                placeholder="Repeat password"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button 
-              onClick={handleSaveCredentials} 
-              disabled={credLoading} 
+            <button
+              onClick={handleSaveCredentials}
+              disabled={credLoading}
               className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50"
             >
-              {credLoading ? 'Saving...' : 'Update Credentials'}
+              {credLoading ? "Saving..." : "Update Credentials"}
             </button>
             {credMessage && (
-              <span className={`text-sm font-medium ${credMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+              <span
+                className={`text-sm font-medium ${
+                  credMessage.includes("success")
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
                 {credMessage}
               </span>
             )}
@@ -275,13 +341,20 @@ export default function AdminPage() {
         ) : adminData.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
             <div className="text-6xl mb-4">⚙️</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">No settings found</h3>
-            <p className="text-gray-600">Please contact support to initialize settings</p>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              No settings found
+            </h3>
+            <p className="text-gray-600">
+              Please contact support to initialize settings
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
             {adminData.map((row) => (
-              <div key={row.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <div
+                key={row.id}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden"
+              >
                 {/* Images Section */}
                 <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -291,27 +364,49 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Main Video */}
                     <div>
-                      <p className="text-white text-sm font-semibold mb-2">Main Background Video</p>
+                      <p className="text-white text-sm font-semibold mb-2">
+                        Main Background Video
+                      </p>
                       <div className="relative aspect-video bg-white/20 rounded-lg overflow-hidden">
                         {row.video_principal ? (
-                          <video src={row.video_principal} className="w-full h-full object-cover" muted loop autoPlay />
+                          <video
+                            src={row.video_principal}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                            autoPlay
+                          />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white/50 text-xs">No video</div>
+                          <div className="w-full h-full flex items-center justify-center text-white/50 text-xs">
+                            No video
+                          </div>
                         )}
                       </div>
                     </div>
                     {/* Gallery Cover */}
                     <div>
-                      <p className="text-white text-sm font-semibold mb-2">Gallery Cover</p>
+                      <p className="text-white text-sm font-semibold mb-2">
+                        Gallery Cover
+                      </p>
                       <div className="relative aspect-video bg-white/20 rounded-lg overflow-hidden">
-                        <img src={row.portada_galeria || ''} alt="Gallery Cover" className="w-full h-full object-cover" />
+                        <img
+                          src={row.portada_galeria || ""}
+                          alt="Gallery Cover"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </div>
                     {/* Logo */}
                     <div>
-                      <p className="text-white text-sm font-semibold mb-2">Logo</p>
+                      <p className="text-white text-sm font-semibold mb-2">
+                        Logo
+                      </p>
                       <div className="relative aspect-video bg-white/20 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img src={row.logo || ''} alt="Logo" className="max-w-full max-h-full object-contain" />
+                        <img
+                          src={row.logo || ""}
+                          alt="Logo"
+                          className="max-w-full max-h-full object-contain"
+                        />
                       </div>
                     </div>
                   </div>
@@ -320,7 +415,9 @@ export default function AdminPage() {
                 {/* Info Section */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">Contact & Social Information</h3>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Contact & Social Information
+                    </h3>
                     <button
                       onClick={() => openEditModal(row)}
                       className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-semibold"
@@ -337,8 +434,12 @@ export default function AdminPage() {
                         <Globe className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Site Name</p>
-                        <p className="font-semibold text-gray-900">{row.nombre_web || '—'}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          Site Name
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {row.nombre_web || "—"}
+                        </p>
                       </div>
                     </div>
 
@@ -348,8 +449,12 @@ export default function AdminPage() {
                         <Mail className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Email</p>
-                        <p className="font-semibold text-gray-900">{row.correo || '—'}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          Email
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {row.correo || "—"}
+                        </p>
                       </div>
                     </div>
 
@@ -359,8 +464,12 @@ export default function AdminPage() {
                         <Phone className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Phone</p>
-                        <p className="font-semibold text-gray-900">{row.celular || '—'}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          Phone
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {row.celular || "—"}
+                        </p>
                       </div>
                     </div>
 
@@ -370,21 +479,27 @@ export default function AdminPage() {
                         <MapPin className="w-5 h-5 text-orange-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Address</p>
-                        <p className="font-semibold text-gray-900">{row.direccion || '—'}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          Address
+                        </p>
+                        <p className="font-semibold text-gray-900">
+                          {row.direccion || "—"}
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Social Links */}
                   <div className="mt-6 pt-6 border-t-2 border-gray-100">
-                    <p className="text-sm font-semibold text-gray-500 uppercase mb-3">Social Media</p>
+                    <p className="text-sm font-semibold text-gray-500 uppercase mb-3">
+                      Social Media
+                    </p>
                     <div className="flex flex-wrap gap-3">
                       {row.facebook && (
-                        <a 
-                          href={`https://${row.facebook}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={`https://${row.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-semibold"
                         >
                           <Facebook className="w-4 h-4" />
@@ -392,10 +507,10 @@ export default function AdminPage() {
                         </a>
                       )}
                       {row.instagram && (
-                        <a 
-                          href={`https://${row.instagram}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={`https://${row.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex items-center gap-2 px-4 py-2 bg-pink-50 text-pink-700 rounded-lg hover:bg-pink-100 transition-colors font-semibold"
                         >
                           <Instagram className="w-4 h-4" />
@@ -403,20 +518,26 @@ export default function AdminPage() {
                         </a>
                       )}
                       {row.tiktok && (
-                        <a 
-                          href={`https://${row.tiktok}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={`https://${row.tiktok}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                           </svg>
                           TikTok
                         </a>
                       )}
                       {!row.facebook && !row.instagram && !row.tiktok && (
-                        <p className="text-gray-500 text-sm">No social links added</p>
+                        <p className="text-gray-500 text-sm">
+                          No social links added
+                        </p>
                       )}
                     </div>
                   </div>
@@ -470,23 +591,25 @@ export default function AdminPage() {
                       <div className="relative">
                         <div className="aspect-video border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-purple-500 transition-colors bg-gray-50">
                           {editFiles[0] ? (
-                            <video 
-                              src={URL.createObjectURL(editFiles[0])} 
-                              className="w-full h-full object-cover" 
-                              muted 
-                              loop 
-                              autoPlay 
+                            <video
+                              src={URL.createObjectURL(editFiles[0])}
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                              autoPlay
                             />
                           ) : currentRow.video_principal ? (
-                            <video 
-                              src={currentRow.video_principal} 
-                              className="w-full h-full object-cover" 
-                              muted 
-                              loop 
-                              autoPlay 
+                            <video
+                              src={currentRow.video_principal}
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                              autoPlay
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Click to upload video</div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              Click to upload video
+                            </div>
                           )}
                         </div>
                         <input
@@ -495,15 +618,21 @@ export default function AdminPage() {
                           onChange={(e) => handleFileChange(0, e)}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
-                        <p className="text-xs text-gray-600 mt-1 text-center">Main Background Video</p>
+                        <p className="text-xs text-gray-600 mt-1 text-center">
+                          Main Background Video
+                        </p>
                       </div>
                       {/* Gallery Cover */}
                       <div className="relative">
                         <div className="aspect-video border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-purple-500 transition-colors bg-gray-50">
-                          <img 
-                            src={editFiles[1] ? URL.createObjectURL(editFiles[1]) : currentRow.portada_galeria || ''} 
-                            alt="Gallery Cover" 
-                            className="w-full h-full object-cover" 
+                          <img
+                            src={
+                              editFiles[1]
+                                ? URL.createObjectURL(editFiles[1])
+                                : currentRow.portada_galeria || ""
+                            }
+                            alt="Gallery Cover"
+                            className="w-full h-full object-cover"
                           />
                         </div>
                         <input
@@ -512,15 +641,21 @@ export default function AdminPage() {
                           onChange={(e) => handleFileChange(1, e)}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
-                        <p className="text-xs text-gray-600 mt-1 text-center">Gallery Cover</p>
+                        <p className="text-xs text-gray-600 mt-1 text-center">
+                          Gallery Cover
+                        </p>
                       </div>
                       {/* Logo */}
                       <div className="relative">
                         <div className="aspect-video border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-purple-500 transition-colors bg-gray-50 flex items-center justify-center">
-                          <img 
-                            src={editFiles[2] ? URL.createObjectURL(editFiles[2]) : currentRow.logo || ''} 
-                            alt="Logo" 
-                            className="max-w-full max-h-full object-contain" 
+                          <img
+                            src={
+                              editFiles[2]
+                                ? URL.createObjectURL(editFiles[2])
+                                : currentRow.logo || ""
+                            }
+                            alt="Logo"
+                            className="max-w-full max-h-full object-contain"
                           />
                         </div>
                         <input
@@ -529,7 +664,9 @@ export default function AdminPage() {
                           onChange={(e) => handleFileChange(2, e)}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
-                        <p className="text-xs text-gray-600 mt-1 text-center">Logo</p>
+                        <p className="text-xs text-gray-600 mt-1 text-center">
+                          Logo
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -537,21 +674,25 @@ export default function AdminPage() {
                   {/* Contact Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Site Name</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Site Name
+                      </label>
                       <input
                         type="text"
                         name="nombre_web"
-                        value={currentRow.nombre_web || ''}
+                        value={currentRow.nombre_web || ""}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Email
+                      </label>
                       <input
                         type="email"
                         name="correo"
-                        value={currentRow.correo || ''}
+                        value={currentRow.correo || ""}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                       />
@@ -560,21 +701,25 @@ export default function AdminPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone
+                      </label>
                       <input
                         type="text"
                         name="celular"
-                        value={currentRow.celular || ''}
+                        value={currentRow.celular || ""}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Address
+                      </label>
                       <input
                         type="text"
                         name="direccion"
-                        value={currentRow.direccion || ''}
+                        value={currentRow.direccion || ""}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                       />
@@ -583,36 +728,44 @@ export default function AdminPage() {
 
                   {/* Social Links */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Social Media Links</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Social Media Links
+                    </label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Facebook</label>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          Facebook
+                        </label>
                         <input
                           type="text"
                           name="facebook"
-                          value={currentRow.facebook || ''}
+                          value={currentRow.facebook || ""}
                           onChange={handleChange}
                           placeholder="facebook.com/yourpage"
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Instagram</label>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          Instagram
+                        </label>
                         <input
                           type="text"
                           name="instagram"
-                          value={currentRow.instagram || ''}
+                          value={currentRow.instagram || ""}
                           onChange={handleChange}
                           placeholder="instagram.com/yourprofile"
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">TikTok</label>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          TikTok
+                        </label>
                         <input
                           type="text"
                           name="tiktok"
-                          value={currentRow.tiktok || ''}
+                          value={currentRow.tiktok || ""}
                           onChange={handleChange}
                           placeholder="tiktok.com/@yourprofile"
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"

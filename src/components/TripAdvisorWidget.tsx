@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import './TripAdvisorWidget.css';
+import React, { useEffect, useRef, useState } from "react";
+import "./TripAdvisorWidget.css";
 
 interface TripWidgetProps {
   images?: string[];
@@ -16,13 +16,13 @@ interface TripWidgetProps {
 
 const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
   images = [],
-  title = 'Roatán Paradise Tour',
-  location = 'Roatán, Honduras',
+  title = "Roatán Paradise Tour",
+  location = "Roatán, Honduras",
   rating = 4.8,
   ratingCount = 123,
-  views = '1.2k',
-  ctaText = 'TripAdvisor',
-  ctaHref = 'https://www.tripadvisor.com/Attraction_Review-g292019-d19846218-Reviews-Roatan_Robert_Tour-Roatan_Bay_Islands.html',
+  views = "1.2k",
+  ctaText = "TripAdvisor",
+  ctaHref = "https://www.tripadvisor.com/Attraction_Review-g292019-d19846218-Reviews-Roatan_Robert_Tour-Roatan_Bay_Islands.html",
   autoPlay = true,
   autoPlayInterval = 4000,
 }) => {
@@ -55,14 +55,17 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
     const onEnter = () => stopTimer();
     const onLeave = () => {
       if (autoPlay) {
-        timer.current = window.setInterval(() => setIndex((i) => (i + 1) % length), autoPlayInterval);
+        timer.current = window.setInterval(
+          () => setIndex((i) => (i + 1) % length),
+          autoPlayInterval
+        );
       }
     };
-    el.addEventListener('mouseenter', onEnter);
-    el.addEventListener('mouseleave', onLeave);
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
     return () => {
-      el.removeEventListener('mouseenter', onEnter);
-      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, autoPlayInterval, length]);
@@ -70,8 +73,14 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
   return (
     <div className="trip-widget" role="region" aria-label="TripAdvisor widget">
       <div className="carousel-container" ref={containerRef}>
-        <div className="carousel" style={{ transform: `translateX(-${index * 100}%)` }}>
-          {(images.length > 0 ? images : ['/logo.webp']).map((src, i) => (
+        <div
+          className="carousel"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {(images.length > 0
+            ? images.filter((_, i) => i === 0 || i === 2)
+            : ["/logo.webp"]
+          ).map((src, i) => (
             <div key={i} className="carousel-slide">
               <img src={src} alt={`${title} ${i + 1}`} />
             </div>
@@ -80,14 +89,26 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
 
         {length > 1 && (
           <>
-            <button aria-label="Previous" className="carousel-btn prev-btn" onClick={goPrev}>‹</button>
-            <button aria-label="Next" className="carousel-btn next-btn" onClick={goNext}>›</button>
+            <button
+              aria-label="Previous"
+              className="carousel-btn prev-btn"
+              onClick={goPrev}
+            >
+              ‹
+            </button>
+            <button
+              aria-label="Next"
+              className="carousel-btn next-btn"
+              onClick={goNext}
+            >
+              ›
+            </button>
 
             <div className="carousel-indicators" aria-hidden>
               {Array.from({ length }).map((_, i) => (
                 <div
                   key={i}
-                  className={`indicator ${i === index ? 'active' : ''}`}
+                  className={`indicator ${i === index ? "active" : ""}`}
                   onClick={() => setIndex(i)}
                 />
               ))}
@@ -99,16 +120,20 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
       <div className="content">
         <div className="header">
           <div className="stars" aria-hidden>
-            {Array.from({ length: Math.round(rating) }).map((_, i) => '★')}
+            {Array.from({ length: Math.round(rating) }).map((_, i) => "★")}
           </div>
-          <div className="rating-count">{rating.toFixed(1)} · {ratingCount}</div>
+          <div className="rating-count">
+            {rating.toFixed(1)} · {ratingCount}
+          </div>
         </div>
 
         <h4 className="title">{title}</h4>
         <div className="location">📍 {location}</div>
         <div className="views">👁️ {views} views</div>
 
-        <a className="cta-btn" href={ctaHref}>{ctaText}</a>
+        <a className="cta-btn" href={ctaHref}>
+          {ctaText}
+        </a>
       </div>
     </div>
   );
