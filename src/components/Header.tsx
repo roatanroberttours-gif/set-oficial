@@ -175,8 +175,8 @@ const Header: React.FC = () => {
                     </Link>
                     
                     {servicesDropdownOpen && tours.length > 0 && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-50">
-                        <div className="py-2">
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]">
+                        <div className="py-2 max-h-96 overflow-y-auto">
                           {tours.map((tour) => (
                             <Link
                               key={tour.id}
@@ -213,8 +213,8 @@ const Header: React.FC = () => {
                     </Link>
                     
                     {privateTourDropdownOpen && privateTours.length > 0 && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-50">
-                        <div className="py-2">
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]">
+                        <div className="py-2 max-h-96 overflow-y-auto">
                           {privateTours.map((tour) => (
                             <Link
                               key={tour.id}
@@ -284,7 +284,7 @@ const Header: React.FC = () => {
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
                       </Link>
                       {servicesDropdownOpen && tours.length > 0 && (
-                        <div className="bg-gray-50 border-l-4 border-teal-500">
+                        <div className="bg-gray-50 border-l-4 border-teal-500 max-h-60 overflow-y-auto">
                           {tours.map((tour) => (
                             <Link
                               key={tour.id}
@@ -322,7 +322,7 @@ const Header: React.FC = () => {
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
                       </Link>
                       {privateTourDropdownOpen && privateTours.length > 0 && (
-                        <div className="bg-gray-50 border-l-4 border-teal-500">
+                        <div className="bg-gray-50 border-l-4 border-teal-500 max-h-60 overflow-y-auto">
                           {privateTours.map((tour) => (
                             <Link
                               key={tour.id}
