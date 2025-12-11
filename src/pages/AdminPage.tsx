@@ -9,6 +9,7 @@ type AdminRow = {
   portada?: string | null;
   portada_galeria?: string | null;
   logo?: string | null;
+  video_principal?: string | null;
   nombre_web?: string | null;
   celular?: string | null;
   direccion?: string | null;
@@ -109,15 +110,15 @@ export default function AdminPage() {
     try {
       const { id, ...updateData } = currentRow as AdminRow;
       
-      // Upload new images
+      // Upload new files (video for slot 0, images for others)
       for (let i = 0; i < editFiles.length; i++) {
         const file = editFiles[i];
         if (file) {
-          const slotName = i === 0 ? 'portada' : i === 1 ? 'portada_galeria' : 'logo';
+          const slotName = i === 0 ? 'video_principal' : i === 1 ? 'portada_galeria' : 'logo';
           const filePath = `admin/${Date.now()}_${slotName}_${file.name}`;
           
           const uploadResp = await client.storage.from('principal').upload(filePath, file, { upsert: true });
-          if (uploadResp.error) throw new Error('Error uploading image: ' + uploadResp.error.message);
+          if (uploadResp.error) throw new Error('Error uploading file: ' + uploadResp.error.message);
           
           const urlResult = client.storage.from('principal').getPublicUrl(filePath);
           if (urlResult?.data?.publicUrl) {
@@ -288,11 +289,15 @@ export default function AdminPage() {
                     Website Images
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Cover */}
+                    {/* Main Video */}
                     <div>
-                      <p className="text-white text-sm font-semibold mb-2">Main Cover</p>
+                      <p className="text-white text-sm font-semibold mb-2">Main Background Video</p>
                       <div className="relative aspect-video bg-white/20 rounded-lg overflow-hidden">
-                        <img src={row.portada || ''} alt="Cover" className="w-full h-full object-cover" />
+                        {row.video_principal ? (
+                          <video src={row.video_principal} className="w-full h-full object-cover" muted loop autoPlay />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white/50 text-xs">No video</div>
+                        )}
                       </div>
                     </div>
                     {/* Gallery Cover */}
@@ -461,22 +466,36 @@ export default function AdminPage() {
                       Update Images
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Cover */}
+                      {/* Main Video */}
                       <div className="relative">
                         <div className="aspect-video border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-purple-500 transition-colors bg-gray-50">
-                          <img 
-                            src={editFiles[0] ? URL.createObjectURL(editFiles[0]) : currentRow.portada || ''} 
-                            alt="Cover" 
-                            className="w-full h-full object-cover" 
-                          />
+                          {editFiles[0] ? (
+                            <video 
+                              src={URL.createObjectURL(editFiles[0])} 
+                              className="w-full h-full object-cover" 
+                              muted 
+                              loop 
+                              autoPlay 
+                            />
+                          ) : currentRow.video_principal ? (
+                            <video 
+                              src={currentRow.video_principal} 
+                              className="w-full h-full object-cover" 
+                              muted 
+                              loop 
+                              autoPlay 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Click to upload video</div>
+                          )}
                         </div>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="video/*"
                           onChange={(e) => handleFileChange(0, e)}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
-                        <p className="text-xs text-gray-600 mt-1 text-center">Main Cover</p>
+                        <p className="text-xs text-gray-600 mt-1 text-center">Main Background Video</p>
                       </div>
                       {/* Gallery Cover */}
                       <div className="relative">
