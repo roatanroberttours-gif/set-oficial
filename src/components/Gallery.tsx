@@ -141,12 +141,12 @@ const Gallery: React.FC = () => {
           </p>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {/* Gallery Grid - Masonry Layout */}
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 mb-12">
           {galleryItems.map((item, index) => (
             <div
               key={item.id}
-              className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer"
+              className="group relative break-inside-avoid overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer"
               onClick={() => {
                 const imgs = (item as any).images || [item.image];
                 if (!imgs || imgs.length === 0) return;
@@ -157,42 +157,44 @@ const Gallery: React.FC = () => {
               }}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {/* Image */}
-              <div className="relative h-64 overflow-hidden">
+              <div className="relative">
+                {/* Image */}
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-semibold text-lg mb-1">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <div className="text-gray-200 text-sm" dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }} />
-                    )}
+                {/* Overlay - Gradient always present but subtle, stronger on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+
+                {/* Content Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 transform translate-y-4 group-hover:translate-y-0">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md bg-white/20 text-white border border-white/20 ${getCategoryColor(
+                        item.category || "general"
+                      ).replace("bg-", "bg-opacity-80 ")}`}
+                    >
+                      {getCategoryName(item.category || "general")}
+                    </span>
                   </div>
+                  <h3 className="text-white font-bold text-xl md:text-2xl mb-2 drop-shadow-md">
+                    {item.title}
+                  </h3>
+                  {item.description && (
+                    <div
+                      className="text-gray-200 text-sm line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"
+                      dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }}
+                    />
+                  )}
                 </div>
 
-                {/* Category Badge */}
-                <div className="absolute top-4 left-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-white text-xs font-medium ${getCategoryColor(
-                      item.category || "general"
-                    )}`}
-                  >
-                    {getCategoryName(item.category || "general")}
-                  </span>
-                </div>
-
-                {/* Hover Icon */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                {/* Hover Icon (Central) */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 transform scale-50 group-hover:scale-100 transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)">
                     <svg
-                      className="w-8 h-8 text-white"
+                      className="w-6 h-6 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

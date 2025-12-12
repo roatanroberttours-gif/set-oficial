@@ -221,11 +221,11 @@ const GalleryPage: React.FC = () => {
               <p className="text-white/70 mb-6">There are no photos yet.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
               {galleryItems.map((item, index) => (
                 <div
                   key={item.id}
-                  className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 hover:scale-105 cursor-pointer animate-fade-in-up"
+                  className="group relative break-inside-avoid overflow-hidden rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer animate-fade-in-up"
                   onClick={() => {
                     const imgs = (item as any).images || [item.image];
                     if (!imgs || imgs.length === 0) return;
@@ -234,60 +234,59 @@ const GalleryPage: React.FC = () => {
                     setLightboxOpen(true);
                     document.body.style.overflow = "hidden";
                   }}
-                  style={{ 
+                  style={{
                     animationDelay: `${index * 0.05}s`,
                     animationFillMode: 'both'
                   }}
                 >
-                  {/* Image Container with aspect ratio */}
-                  <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-teal-500/10 to-blue-500/10">
+                  <div className="relative">
+                    {/* Image - Natural Aspect Ratio */}
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-125 group-hover:rotate-2 transition-all duration-700 ease-out"
+                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
                       loading="lazy"
                     />
-                    
+
                     {/* Shine effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none"></div>
 
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500">
                     </div>
 
-                    {/* Content Overlay - always visible at bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                      <h3 className="text-white font-bold text-base mb-1 drop-shadow-lg">
+                    {/* Content Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+
+                      {/* Category Badge - Animated Entry */}
+                      <div className="mb-3 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100 transform translate-y-2 group-hover:translate-y-0">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-xs font-medium backdrop-blur-md bg-white/10 border border-white/20 ${getCategoryColor(
+                            item.category || "general"
+                          ).replace("bg-", "text-")}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${getCategoryColor(item.category || "general")}`}></span>
+                          {getCategoryLabel(item.category || "general")}
+                        </span>
+                      </div>
+
+                      <h3 className="text-white font-bold text-lg mb-2 drop-shadow-md leading-tight">
                         {item.title}
                       </h3>
+
                       {item.description && (
-                        <div 
-                          className="text-white/90 text-xs line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" 
-                          dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }} 
+                        <div
+                          className="text-gray-300 text-xs line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: formatTextToHtml(item.description) }}
                         />
                       )}
                     </div>
 
-                    {/* Category Badge */}
-                    <div className="absolute top-3 left-3 transform -translate-x-1 group-hover:translate-x-0 transition-transform duration-300">
-                      <span
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-lg backdrop-blur-sm ${getCategoryColor(
-                          item.category || "general"
-                        )}`}
-                      >
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                        </svg>
-                        {getCategoryLabel(item.category || "general")}
-                      </span>
-                    </div>
-
                     {/* Hover Zoom Icon */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform scale-50 group-hover:scale-100">
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white/30 shadow-2xl">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
+                      <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 transform scale-50 group-hover:scale-100 transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)">
                         <svg
-                          className="w-8 h-8 text-white"
+                          className="w-6 h-6 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -295,7 +294,7 @@ const GalleryPage: React.FC = () => {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2.5}
+                            strokeWidth={2}
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
                           />
                         </svg>
@@ -370,7 +369,7 @@ const GalleryPage: React.FC = () => {
                 alt={`Imagen ${lightboxIndex + 1}`}
                 className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border-4 border-white/10"
               />
-              
+
               {/* Image glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl blur-3xl -z-10 opacity-50"></div>
             </div>
@@ -395,11 +394,10 @@ const GalleryPage: React.FC = () => {
                       e.stopPropagation();
                       setLightboxIndex(idx);
                     }}
-                    className={`relative w-16 h-16 rounded-lg overflow-hidden transition-all duration-300 border-2 ${
-                      idx === lightboxIndex
+                    className={`relative w-16 h-16 rounded-lg overflow-hidden transition-all duration-300 border-2 ${idx === lightboxIndex
                         ? 'border-teal-400 scale-110 shadow-lg shadow-teal-500/50'
                         : 'border-white/20 hover:border-white/40 hover:scale-105 opacity-60 hover:opacity-100'
-                    }`}
+                      }`}
                   >
                     <img
                       src={img}
