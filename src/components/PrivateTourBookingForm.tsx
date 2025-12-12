@@ -273,9 +273,7 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
       !formData.hometownState ||
       !formData.hometownCountry ||
       !formData.numberOfGuestsAge5Up ||
-      formData.numberOfGuestsAge5Up < 1 ||
-      formData.numberOfGuestsUnder5 === null ||
-      formData.numberOfGuestsUnder5 === "" ||
+      Number(formData.numberOfGuestsAge5Up) < 1 ||
       formData.numberOfGuestsUnder5 < 0 ||
       !formData.phone ||
       !formData.email ||
