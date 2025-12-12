@@ -37,6 +37,19 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
   const timer = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Load Elfsight platform script once for the embedded reviews widget
+  useEffect(() => {
+    const src = "https://elfsightcdn.com/platform.js";
+    if (document.querySelector(`script[src="${src}"]`)) return;
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    document.body.appendChild(s);
+    return () => {
+      // keep the script (other pages/components may reuse it)
+    };
+  }, []);
+
   useEffect(() => {
     if (!autoPlay) return;
     stopTimer();
@@ -161,47 +174,14 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
           </div>
         </div>
 
-        <h4 className="title">{title}</h4>
-        <div className="location">📍 {location}</div>
-        <div
-          className="views"
-          role="button"
-          tabIndex={0}
-          onClick={async () => {
-            setModalOpen(true);
-            if (reviews || reviewsLoading) return;
-            setReviewsLoading(true);
-            try {
-              const url = `${reviewsApiEndpoint}?url=${encodeURIComponent(
-                ctaHref
-              )}&max=20`;
-              const res = await fetch(url);
-              if (!res.ok) throw new Error(`Status ${res.status}`);
-              const json = await res.json();
-              if (json && Array.isArray(json.reviews)) setReviews(json.reviews);
-              else if (Array.isArray(json)) setReviews(json);
-              if (json && typeof json.count === "number")
-                setReviewsCount(json.count);
-            } catch (err) {
-              console.error("Error fetching reviews", err);
-            } finally {
-              setReviewsLoading(false);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              (e.target as HTMLElement).click();
-            }
-          }}
-        >
-          {reviewsCount != null
-            ? `(${reviewsCount}) reviews`
-            : `👁️ ${views} views`}
-        </div>
+        {/* Title, location, views and CTA removed — Elfsight plugin used below */}
 
-        <a className="cta-btn" href={ctaHref}>
-          {ctaText}
-        </a>
+        {/* Elfsight Reviews plugin */}
+        {/* <!-- Elfsight Reviews from Tripadvisor | Untitled Reviews from Tripadvisor --> */}
+        <div
+          className="elfsight-app-dc958993-071e-4065-a102-962b1d4c9869 mt-4"
+          data-elfsight-app-lazy
+        />
       </div>
       {/* Reviews Modal */}
       {modalOpen && (
