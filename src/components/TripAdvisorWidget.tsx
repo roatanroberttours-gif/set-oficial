@@ -12,6 +12,7 @@ interface TripWidgetProps {
   ctaHref?: string;
   autoPlay?: boolean;
   autoPlayInterval?: number;
+  reviewsApiEndpoint?: string;
 }
 
 const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
@@ -25,7 +26,12 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
   ctaHref = "https://www.tripadvisor.com/Attraction_Review-g292019-d19846218-Reviews-Roatan_Robert_Tour-Roatan_Bay_Islands.html",
   autoPlay = true,
   autoPlayInterval = 4000,
+  reviewsApiEndpoint = "/reviews",
 }) => {
+  const [reviewsCount, setReviewsCount] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<any[] | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const length = Math.max(1, images.length || 1);
   const timer = useRef<number | null>(null);
@@ -69,6 +75,34 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, autoPlayInterval, length]);
+
+  // Fetch reviews count on mount (light request)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const url = `${reviewsApiEndpoint}?url=${encodeURIComponent(
+          ctaHref
+        )}&max=1`;
+        const res = await fetch(url);
+        if (!mounted) return;
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const json = await res.json();
+        if (json && typeof json.count === "number") {
+          setReviewsCount(json.count);
+        } else if (Array.isArray(json.reviews)) {
+          setReviewsCount(json.reviews.length);
+        }
+      } catch (err) {
+        // ignore, leave views as fallback
+        // console.warn('Error fetching reviews count', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctaHref, reviewsApiEndpoint]);
 
   return (
     <div className="trip-widget" role="region" aria-label="TripAdvisor widget">
@@ -129,12 +163,89 @@ const TripAdvisorWidget: React.FC<TripWidgetProps> = ({
 
         <h4 className="title">{title}</h4>
         <div className="location">📍 {location}</div>
-        <div className="views">👁️ {views} views</div>
+        <div
+          className="views"
+          role="button"
+          tabIndex={0}
+          onClick={async () => {
+            setModalOpen(true);
+            if (reviews || reviewsLoading) return;
+            setReviewsLoading(true);
+            try {
+              const url = `${reviewsApiEndpoint}?url=${encodeURIComponent(
+                ctaHref
+              )}&max=20`;
+              const res = await fetch(url);
+              if (!res.ok) throw new Error(`Status ${res.status}`);
+              const json = await res.json();
+              if (json && Array.isArray(json.reviews)) setReviews(json.reviews);
+              else if (Array.isArray(json)) setReviews(json);
+              if (json && typeof json.count === "number")
+                setReviewsCount(json.count);
+            } catch (err) {
+              console.error("Error fetching reviews", err);
+            } finally {
+              setReviewsLoading(false);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              (e.target as HTMLElement).click();
+            }
+          }}
+        >
+          {reviewsCount != null
+            ? `(${reviewsCount}) reviews`
+            : `👁️ ${views} views`}
+        </div>
 
         <a className="cta-btn" href={ctaHref}>
           {ctaText}
         </a>
       </div>
+      {/* Reviews Modal */}
+      {modalOpen && (
+        <div className="ta-modal" role="dialog" aria-modal="true">
+          <div
+            className="ta-modal-backdrop"
+            onClick={() => setModalOpen(false)}
+          />
+          <div className="ta-modal-content">
+            <div className="ta-modal-header">
+              <h3>TripAdvisor Reviews</h3>
+              <button
+                className="ta-modal-close"
+                onClick={() => setModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="ta-modal-body">
+              {reviewsLoading && <div>Loading reviews…</div>}
+              {!reviewsLoading && !reviews && (
+                <div className="text-muted">No reviews available.</div>
+              )}
+              {!reviewsLoading && reviews && reviews.length > 0 && (
+                <ul className="ta-reviews-list">
+                  {reviews.map((r, i) => (
+                    <li key={i} className="ta-review">
+                      <div className="ta-review-head">
+                        <strong>{r.title || r.author || "Review"}</strong>
+                        <span className="ta-review-meta">
+                          {r.rating ? `${r.rating} ★` : ""}{" "}
+                          {r.date ? `• ${r.date}` : ""}
+                        </span>
+                      </div>
+                      {r.text && <p className="ta-review-text">{r.text}</p>}
+                      <div className="ta-review-author">{r.author}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

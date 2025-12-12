@@ -91,10 +91,9 @@ const Footer: React.FC = () => {
 
   const quickLinks = [
     { label: t.nav.home, href: "/" },
-    { label: t.nav.services, href: "/services" },
     { label: t.nav.gallery, href: "/gallery" },
     { label: t.nav.contact, href: "/contact" },
-    { label: 'Política de Cancelación', href: '/politica-de-cancelacion' },
+    { label: "Política de Cancelación", href: "/politica-de-cancelacion" },
   ];
 
   return (

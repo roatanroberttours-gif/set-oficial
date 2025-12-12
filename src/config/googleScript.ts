@@ -14,7 +14,7 @@
 export const GOOGLE_SCRIPT_CONFIG = {
   // 🔴 IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script
   GOOGLE_SCRIPT_URL:
-    "https://script.google.com/macros/s/AKfycbzYKBIP_aFyQJ8_V4fLf84n1HJkuccXxh9CWxFSWOLuS7fMNXhGDs5MLPxrFCkIGad6/exec",
+    "https://script.google.com/macros/s/AKfycbz4sF9nzAqHKJlQzR4ycP7tEmH5LObuBkErRBsBQk7CSCSorsNBvrr0ob-JFhh-UMkW/exec",
 
   // Tiempo de espera para la petición (milisegundos)
   TIMEOUT: 10000,

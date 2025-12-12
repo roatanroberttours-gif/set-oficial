@@ -26,8 +26,12 @@ const Header: React.FC = () => {
   const privateCloseTimer = useRef<number | null>(null);
 
   const scheduleCloseServices = (ms = 300) => {
-    if (servicesCloseTimer.current) window.clearTimeout(servicesCloseTimer.current);
-    servicesCloseTimer.current = window.setTimeout(() => setServicesDropdownOpen(false), ms);
+    if (servicesCloseTimer.current)
+      window.clearTimeout(servicesCloseTimer.current);
+    servicesCloseTimer.current = window.setTimeout(
+      () => setServicesDropdownOpen(false),
+      ms
+    );
   };
 
   const cancelCloseServices = () => {
@@ -38,8 +42,12 @@ const Header: React.FC = () => {
   };
 
   const scheduleClosePrivate = (ms = 300) => {
-    if (privateCloseTimer.current) window.clearTimeout(privateCloseTimer.current);
-    privateCloseTimer.current = window.setTimeout(() => setPrivateTourDropdownOpen(false), ms);
+    if (privateCloseTimer.current)
+      window.clearTimeout(privateCloseTimer.current);
+    privateCloseTimer.current = window.setTimeout(
+      () => setPrivateTourDropdownOpen(false),
+      ms
+    );
   };
 
   const cancelClosePrivate = () => {
@@ -51,8 +59,10 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (servicesCloseTimer.current) window.clearTimeout(servicesCloseTimer.current);
-      if (privateCloseTimer.current) window.clearTimeout(privateCloseTimer.current);
+      if (servicesCloseTimer.current)
+        window.clearTimeout(servicesCloseTimer.current);
+      if (privateCloseTimer.current)
+        window.clearTimeout(privateCloseTimer.current);
     };
   }, []);
 
@@ -83,19 +93,19 @@ const Header: React.FC = () => {
     (async () => {
       try {
         console.log("Header: Starting to load tours...");
-        
+
         // Load regular tours (paquetes)
         const { data: toursData, error: toursError } = await client
           .from("paquetes")
           .select("*")
           .order("id", { ascending: true });
-        
-        console.log("Header: paquetes query result:", { 
-          data: toursData, 
+
+        console.log("Header: paquetes query result:", {
+          data: toursData,
           error: toursError,
-          length: toursData?.length 
+          length: toursData?.length,
         });
-        
+
         if (toursError) {
           console.error("Header: paquetes error:", toursError);
           throw toursError;
@@ -107,13 +117,13 @@ const Header: React.FC = () => {
           .from("private_tours")
           .select("*")
           .order("id", { ascending: true });
-        
-        console.log("Header: private_tours query result:", { 
-          data: privateData, 
+
+        console.log("Header: private_tours query result:", {
+          data: privateData,
           error: privateError,
-          length: privateData?.length 
+          length: privateData?.length,
         });
-        
+
         if (privateError) {
           console.error("Header: private_tours error:", privateError);
           throw privateError;
@@ -122,9 +132,15 @@ const Header: React.FC = () => {
 
         console.log("Header: ✅ Successfully loaded tours!");
         console.log("Header: tours state will be:", toursData?.length || 0);
-        console.log("Header: privateTours state will be:", privateData?.length || 0);
+        console.log(
+          "Header: privateTours state will be:",
+          privateData?.length || 0
+        );
       } catch (err) {
-        console.error("❌ Header: Error loading tours for header dropdown:", err);
+        console.error(
+          "❌ Header: Error loading tours for header dropdown:",
+          err
+        );
       }
     })();
     return () => {
@@ -172,8 +188,12 @@ const Header: React.FC = () => {
 
   const navItems = [
     { key: "home", href: "/", label: t.nav.home },
-    { key: "services", href: "/services", label: t.nav.services, hasDropdown: true },
-    { key: "private-tour", href: "/private-tour", label: "Private Tour", hasDropdown: true },
+    {
+      key: "private-tour",
+      href: "/private-tour",
+      label: "Private Tour",
+      hasDropdown: true,
+    },
     { key: "gallery", href: "/gallery", label: t.nav.gallery },
     { key: "contact", href: "/contact", label: t.nav.contact },
   ];
@@ -233,13 +253,19 @@ const Header: React.FC = () => {
                     <Link
                       to={item.href}
                       className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-2 ${
-                        isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                        isActivePath(item.href)
+                          ? "text-teal-500"
+                          : "text-gray-800"
                       }`}
                     >
                       {item.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          servicesDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
                     </Link>
-                    
+
                     {servicesDropdownOpen && tours.length > 0 && (
                       <div
                         className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
@@ -263,7 +289,7 @@ const Header: React.FC = () => {
                   </div>
                 );
               }
-              
+
               if (item.key === "private-tour" && item.hasDropdown) {
                 return (
                   <div
@@ -280,13 +306,19 @@ const Header: React.FC = () => {
                     <Link
                       to={item.href}
                       className={`font-medium transition-colors duration-200 hover:text-teal-500 flex items-center gap-2 ${
-                        isActivePath(item.href) ? "text-teal-500" : "text-gray-800"
+                        isActivePath(item.href)
+                          ? "text-teal-500"
+                          : "text-gray-800"
                       }`}
                     >
                       {item.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          privateTourDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
                     </Link>
-                    
+
                     {privateTourDropdownOpen && privateTours.length > 0 && (
                       <div
                         className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in z-[100]"
@@ -310,7 +342,7 @@ const Header: React.FC = () => {
                   </div>
                 );
               }
-              
+
               return (
                 <Link
                   key={item.key}
@@ -360,7 +392,11 @@ const Header: React.FC = () => {
                         }`}
                       >
                         {item.label}
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-200 ${
+                            servicesDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
                       </Link>
                       {servicesDropdownOpen && tours.length > 0 && (
                         <div className="bg-gray-50 border-l-4 border-teal-500 max-h-60 overflow-y-auto">
@@ -382,7 +418,7 @@ const Header: React.FC = () => {
                     </div>
                   );
                 }
-                
+
                 if (item.key === "private-tour" && item.hasDropdown) {
                   return (
                     <div key={item.key}>
@@ -398,7 +434,11 @@ const Header: React.FC = () => {
                         }`}
                       >
                         {item.label}
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${privateTourDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-200 ${
+                            privateTourDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
                       </Link>
                       {privateTourDropdownOpen && privateTours.length > 0 && (
                         <div className="bg-gray-50 border-l-4 border-teal-500 max-h-60 overflow-y-auto">
@@ -420,7 +460,7 @@ const Header: React.FC = () => {
                     </div>
                   );
                 }
-                
+
                 return (
                   <Link
                     key={item.key}

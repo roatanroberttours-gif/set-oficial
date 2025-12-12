@@ -1,0 +1,17 @@
+{
+  "name": "tripadvisor-scraper",
+  "version": "1.0.0",
+  "description": "Simple TripAdvisor reviews scraper service using Puppeteer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:dev": "NODE_ENV=development node server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "puppeteer": "^20.10.1"
+  }
+}

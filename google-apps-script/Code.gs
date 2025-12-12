@@ -133,6 +133,22 @@ function generateBookingPDF(data) {
 
     body.appendParagraph(""); // Espacio
 
+    // MEETING POINT INFORMATION
+    if (data.meetingPoint) {
+      addSection(body, "MEETING POINT");
+      addField(body, "Location", data.meetingPoint.title);
+      if (data.meetingPoint.zone) {
+        addField(body, "Zone", data.meetingPoint.zone);
+      }
+      if (data.meetingPoint.instructions) {
+        addField(body, "Instructions", data.meetingPoint.instructions);
+      }
+      if (data.meetingPoint.mapUrl) {
+        addField(body, "Map URL", data.meetingPoint.mapUrl);
+      }
+      body.appendParagraph(""); // Espacio
+    }
+
     // GROUP SIZE
     addSection(body, "GROUP SIZE");
     addField(body, "Guests (Age 5+)", data.numberOfGuestsAge5Up.toString());
@@ -153,14 +169,26 @@ function generateBookingPDF(data) {
       data.selectedAdditionalOptions &&
       data.selectedAdditionalOptions.length > 0
     ) {
-      addSection(body, "ADDITIONAL OPTIONS SELECTED");
+      addSection(body, "ADDITIONAL TOURS/OPTIONS SELECTED");
       data.selectedAdditionalOptions.forEach((option, index) => {
-        const optionText = body.appendParagraph(
-          index + 1 + ". " + option.title
-        );
+        let titleText = index + 1 + ". " + option.title;
+        if (option.price) {
+          titleText += " - $" + option.price;
+        }
+        if (option.duration) {
+          titleText += " (" + option.duration + ")";
+        }
+
+        const optionText = body.appendParagraph(titleText);
         optionText.setBold(true);
         optionText.setFontSize(11);
         optionText.setSpacingBefore(5);
+
+        if (option.description) {
+          const description = body.appendParagraph("   " + option.description);
+          description.setFontSize(9);
+          description.setSpacingAfter(3);
+        }
 
         if (option.subtitle) {
           const subtitle = body.appendParagraph("   " + option.subtitle);
@@ -174,6 +202,50 @@ function generateBookingPDF(data) {
           features.setSpacingAfter(8);
         }
       });
+
+      body.appendParagraph(""); // Espacio
+    }
+
+    // PRICING SUMMARY
+    if (
+      data.pricePerPerson !== undefined ||
+      data.estimatedTotal !== undefined
+    ) {
+      addSection(body, "PRICING SUMMARY");
+
+      if (data.pricePerPerson !== undefined) {
+        addField(
+          body,
+          "Price Per Person",
+          "$" + data.pricePerPerson.toFixed(2)
+        );
+      }
+
+      if (data.numberOfGuests !== undefined) {
+        addField(
+          body,
+          "Number of Guests (Age 5+)",
+          data.numberOfGuests.toString()
+        );
+      }
+
+      if (data.extrasTotal !== undefined && data.extrasTotal > 0) {
+        addField(
+          body,
+          "Additional Options (Total)",
+          "$" + data.extrasTotal.toFixed(2)
+        );
+      }
+
+      if (data.estimatedTotal !== undefined) {
+        const totalPara = body.appendParagraph(
+          "Estimated Total: $" + data.estimatedTotal.toFixed(2)
+        );
+        totalPara.setFontSize(13);
+        totalPara.setBold(true);
+        totalPara.setForegroundColor("#0d9488");
+        totalPara.setSpacingBefore(8);
+      }
 
       body.appendParagraph(""); // Espacio
     }
@@ -332,6 +404,20 @@ function sendClientEmail(data, pdfBlob) {
               <td style="padding: 8px 0; color: #6b7280;"><strong>Cruise/Resort:</strong></td>
               <td style="padding: 8px 0;">${data.cruiseShipOrResortName}</td>
             </tr>
+            ${
+              data.meetingPoint
+                ? `
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;"><strong>Meeting Point:</strong></td>
+              <td style="padding: 8px 0;">${data.meetingPoint.title}${
+                    data.meetingPoint.zone
+                      ? " (" + data.meetingPoint.zone + ")"
+                      : ""
+                  }</td>
+            </tr>
+            `
+                : ""
+            }
             <tr>
               <td style="padding: 8px 0; color: #6b7280;"><strong>Group Size:</strong></td>
               <td style="padding: 8px 0;">${
@@ -340,6 +426,85 @@ function sendClientEmail(data, pdfBlob) {
             </tr>
           </table>
         </div>
+        
+        ${
+          data.meetingPoint && data.meetingPoint.instructions
+            ? `
+        <div style="background-color: #d1fae5; border-left: 4px solid #10b981; border-radius: 8px; padding: 15px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #065f46;">📍 Meeting Point Instructions:</h3>
+          <p style="margin: 0; font-size: 14px; color: #065f46;">
+            ${data.meetingPoint.instructions}
+          </p>
+          ${
+            data.meetingPoint.mapUrl
+              ? `<p style="margin: 10px 0 0 0;"><a href="${data.meetingPoint.mapUrl}" style="color: #059669; font-weight: bold;">🗺️ View on Map</a></p>`
+              : ""
+          }
+        </div>
+        `
+            : ""
+        }
+        
+        ${
+          data.pricePerPerson !== undefined || data.estimatedTotal !== undefined
+            ? `
+        <div style="background-color: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: #0d9488; margin-top: 0;">💰 Pricing Summary:</h3>
+          <table style="width: 100%; font-size: 14px;">
+            ${
+              data.pricePerPerson !== undefined
+                ? `
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;"><strong>Price Per Person:</strong></td>
+              <td style="padding: 8px 0; text-align: right; font-weight: bold;">$${data.pricePerPerson.toFixed(
+                2
+              )}</td>
+            </tr>
+            `
+                : ""
+            }
+            ${
+              data.numberOfGuests !== undefined
+                ? `
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;"><strong>Guests (Age 5+):</strong></td>
+              <td style="padding: 8px 0; text-align: right;">${data.numberOfGuests}</td>
+            </tr>
+            `
+                : ""
+            }
+            ${
+              data.extrasTotal !== undefined && data.extrasTotal > 0
+                ? `
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;"><strong>Additional Options (Total):</strong></td>
+              <td style="padding: 8px 0; text-align: right;">$${data.extrasTotal.toFixed(
+                2
+              )}</td>
+            </tr>
+            `
+                : ""
+            }
+            ${
+              data.estimatedTotal !== undefined
+                ? `
+            <tr style="border-top: 2px solid #0d9488;">
+              <td style="padding: 12px 0 8px 0; color: #0d9488; font-size: 16px;"><strong>Estimated Total:</strong></td>
+              <td style="padding: 12px 0 8px 0; text-align: right; font-size: 18px; font-weight: bold; color: #0d9488;">$${data.estimatedTotal.toFixed(
+                2
+              )}</td>
+            </tr>
+            `
+                : ""
+            }
+          </table>
+          <p style="margin: 10px 0 0 0; font-size: 12px; color: #6b7280; font-style: italic;">
+            * Final pricing will be confirmed by our team.
+          </p>
+        </div>
+        `
+            : ""
+        }
         
         <div style="background-color: #dbeafe; border-radius: 8px; padding: 15px; margin: 20px 0;">
           <p style="margin: 0; font-size: 13px; color: #1e40af;">
@@ -394,7 +559,7 @@ function sendAdminEmail(data, pdfBlob) {
     data.selectedAdditionalOptions && data.selectedAdditionalOptions.length > 0
       ? `
       <div style="margin-top: 20px;">
-        <h3 style="color: #0d9488;">Additional Options Selected:</h3>
+        <h3 style="color: #0d9488;">Additional Tours/Options Selected:</h3>
         <ul style="font-size: 14px; line-height: 1.8;">
           ${data.selectedAdditionalOptions
             .map(
@@ -402,8 +567,36 @@ function sendAdminEmail(data, pdfBlob) {
             <li>
               <strong>${opt.title}</strong>
               ${
+                opt.price
+                  ? '<span style="color: #059669; font-weight: bold;"> - $' +
+                    opt.price +
+                    "</span>"
+                  : ""
+              }
+              ${
+                opt.duration
+                  ? '<span style="color: #6b7280;"> (' +
+                    opt.duration +
+                    ")</span>"
+                  : ""
+              }
+              ${
+                opt.description
+                  ? '<br><span style="color: #374151; font-size: 13px;">' +
+                    opt.description +
+                    "</span>"
+                  : ""
+              }
+              ${
                 opt.subtitle
                   ? '<br><em style="color: #6b7280;">' + opt.subtitle + "</em>"
+                  : ""
+              }
+              ${
+                opt.features
+                  ? '<br><span style="color: #6b7280; font-size: 12px;">' +
+                    opt.features +
+                    "</span>"
                   : ""
               }
             </li>
@@ -488,6 +681,42 @@ function sendAdminEmail(data, pdfBlob) {
               data.cruiseShipOrResortName
             }</td>
           </tr>
+          ${
+            data.meetingPoint
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280;"><strong>Meeting Point:</strong></td>
+            <td style="padding: 10px; font-weight: bold; color: #059669;">📍 ${
+              data.meetingPoint.title
+            }${
+                  data.meetingPoint.zone
+                    ? " (" + data.meetingPoint.zone + ")"
+                    : ""
+                }</td>
+          </tr>
+          ${
+            data.meetingPoint.instructions
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280; vertical-align: top;"><strong>Instructions:</strong></td>
+            <td style="padding: 10px;">${data.meetingPoint.instructions}</td>
+          </tr>
+          `
+              : ""
+          }
+          ${
+            data.meetingPoint.mapUrl
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280;"><strong>Map:</strong></td>
+            <td style="padding: 10px;"><a href="${data.meetingPoint.mapUrl}" style="color: #2563eb;">🗺️ View Location</a></td>
+          </tr>
+          `
+              : ""
+          }
+          `
+              : ""
+          }
           
           <tr style="background-color: #f3f4f6;">
             <td colspan="2" style="padding: 12px; font-weight: bold; color: #0d9488; font-size: 16px;">
@@ -508,6 +737,65 @@ function sendAdminEmail(data, pdfBlob) {
               data.numberOfGuestsAge5Up + data.numberOfGuestsUnder5
             } guests</td>
           </tr>
+          
+          ${
+            data.pricePerPerson !== undefined ||
+            data.estimatedTotal !== undefined
+              ? `
+          <tr style="background-color: #f3f4f6;">
+            <td colspan="2" style="padding: 12px; font-weight: bold; color: #0d9488; font-size: 16px;">
+              💰 PRICING SUMMARY
+            </td>
+          </tr>
+          ${
+            data.pricePerPerson !== undefined
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280;"><strong>Price Per Person:</strong></td>
+            <td style="padding: 10px; font-weight: bold; color: #059669;">$${data.pricePerPerson.toFixed(
+              2
+            )}</td>
+          </tr>
+          `
+              : ""
+          }
+          ${
+            data.numberOfGuests !== undefined
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280;"><strong>Guests (Age 5+):</strong></td>
+            <td style="padding: 10px;">${data.numberOfGuests}</td>
+          </tr>
+          `
+              : ""
+          }
+          ${
+            data.extrasTotal !== undefined && data.extrasTotal > 0
+              ? `
+          <tr>
+            <td style="padding: 10px; color: #6b7280;"><strong>Additional Options (Total):</strong></td>
+            <td style="padding: 10px; font-weight: bold;">$${data.extrasTotal.toFixed(
+              2
+            )}</td>
+          </tr>
+          `
+              : ""
+          }
+          ${
+            data.estimatedTotal !== undefined
+              ? `
+          <tr style="background-color: #d1fae5;">
+            <td style="padding: 12px; color: #065f46; font-size: 15px;"><strong>💵 ESTIMATED TOTAL:</strong></td>
+            <td style="padding: 12px; font-weight: bold; font-size: 18px; color: #059669;">$${data.estimatedTotal.toFixed(
+              2
+            )}</td>
+          </tr>
+          `
+              : ""
+          }
+          `
+              : ""
+          }
         </table>
         
         ${additionalOptionsHtml}
@@ -576,15 +864,38 @@ function testEmailSystem() {
     numberOfGuestsUnder5: 1,
     phone: "+1-555-0123",
     email: "test@example.com",
-    cruiseShipOrResortName: "Carnival Mardi Gras",
+    cruiseShipOrResortName: "West Bay Beach",
     requestedTourDate: "2025-01-15",
+    meetingPoint: {
+      title: "West Bay Beach",
+      zone: "West Bay",
+      instructions:
+        "Meet at the main beach entrance, near the Blue Flag. Look for our SET Tours sign.",
+      mapUrl: "https://maps.google.com/?q=16.3268,-86.6108",
+    },
     selectedAdditionalOptions: [
       {
+        id: 1,
+        title: "Snorkeling Adventure",
+        price: 65,
+        duration: "3 hours",
+        description:
+          "Explore the beautiful coral reefs of Roatan with expert guides.",
+      },
+      {
+        id: 2,
         title: "Mayan Jungle Zipline",
-        subtitle: "45 Minutes to 1 Hour: Add $45 per Participant",
-        features: "Includes FREE access to Victor's Monkey & Sloth Sanctuary",
+        price: 45,
+        duration: "1 hour",
+        description: "Thrilling zipline experience through the jungle canopy.",
+        subtitle: "Includes FREE access to Victor's Monkey & Sloth Sanctuary",
+        features: "Safety equipment and training included",
       },
     ],
+    pricePerPerson: 80.0,
+    numberOfGuests: 2,
+    extrasTotal: 220.0,
+    estimatedTotal: 380.0,
     comments: "Looking forward to this adventure!",
     submittedAt: new Date().toISOString(),
   };

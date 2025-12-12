@@ -40,16 +40,20 @@ const ServiceDetailPage: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        const { data, error } = await clientTop.from('admin').select('*').maybeSingle();
+        const { data, error } = await clientTop
+          .from("admin")
+          .select("*")
+          .maybeSingle();
         if (error) throw error;
         if (mounted) setAdmin(data || null);
       } catch (err) {
-        console.error('Error loading admin in ServiceDetailPage', err);
+        console.error("Error loading admin in ServiceDetailPage", err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [clientTop]);
-
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -60,16 +64,20 @@ const ServiceDetailPage: React.FC = () => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!galleryOpen) return;
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setGalleryOpen(false);
         return;
       }
       if (galleryImages.length === 0) return;
-      if (e.key === 'ArrowLeft') setCurrentImageIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
-      if (e.key === 'ArrowRight') setCurrentImageIndex((i) => (i + 1) % galleryImages.length);
+      if (e.key === "ArrowLeft")
+        setCurrentImageIndex(
+          (i) => (i - 1 + galleryImages.length) % galleryImages.length
+        );
+      if (e.key === "ArrowRight")
+        setCurrentImageIndex((i) => (i + 1) % galleryImages.length);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [galleryOpen, galleryImages.length]);
 
   const loadTour = async () => {
@@ -79,19 +87,29 @@ const ServiceDetailPage: React.FC = () => {
       let paqQuery: any;
       const numericId = Number(id);
       if (!Number.isNaN(numericId)) {
-        paqQuery = await client.from('paquetes').select('*').eq('id', numericId).maybeSingle();
+        paqQuery = await client
+          .from("paquetes")
+          .select("*")
+          .eq("id", numericId)
+          .maybeSingle();
       } else {
-        paqQuery = await client.from('paquetes').select('*').eq('titulo', id).maybeSingle();
+        paqQuery = await client
+          .from("paquetes")
+          .select("*")
+          .eq("titulo", id)
+          .maybeSingle();
       }
       if (paqQuery.error) throw paqQuery.error;
       const paq = paqQuery.data;
       if (!paq) {
-        navigate('/services');
+        navigate("/");
         return;
       }
 
       // Construir array de imágenes reales (filtrar vacíos)
-      const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]).filter(Boolean) as string[];
+      const images = Array.from({ length: 10 })
+        .map((_, i) => paq[`imagen${i + 1}`])
+        .filter(Boolean) as string[];
       setGalleryImages(images);
 
       let included: string[] | undefined = undefined;
@@ -106,20 +124,20 @@ const ServiceDetailPage: React.FC = () => {
 
       const mappedTour: Tour = {
         id: String(paq.id),
-        name: paq.titulo || '',
-        description: paq.descripcion || '',
-        personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
-        price: paq.precio_por_persona ?? (paq.price ?? 0),
-        image: images[0] || '',
-        duration: paq.duracion || '',
+        name: paq.titulo || "",
+        description: paq.descripcion || "",
+        personPrice: paq.precio_por_persona ?? paq.price ?? 0,
+        price: paq.precio_por_persona ?? paq.price ?? 0,
+        image: images[0] || "",
+        duration: paq.duracion || "",
         included,
-        category: paq.categoria || 'adventure',
+        category: paq.categoria || "adventure",
       } as Tour;
 
       setTour(mappedTour);
     } catch (error) {
-      console.error('Error loading paquete from Supabase:', error);
-      navigate('/services');
+      console.error("Error loading paquete from Supabase:", error);
+      navigate("/");
     } finally {
       setLoading(false);
     }
@@ -178,9 +196,12 @@ const ServiceDetailPage: React.FC = () => {
 
   // Formatear USD
   function formatUSD(value?: number) {
-    if (value === undefined || value === null) return '';
+    if (value === undefined || value === null) return "";
     try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(value);
     } catch {
       return `$${value}`;
     }
@@ -190,7 +211,6 @@ const ServiceDetailPage: React.FC = () => {
     { id: "description", label: "Description" },
     { id: "included", label: "Included" },
     { id: "requirements", label: "Requirements" },
-
   ];
 
   if (loading) {
@@ -230,11 +250,11 @@ const ServiceDetailPage: React.FC = () => {
             The tour you are looking for doesn't exist or has been removed.
           </p>
           <Link
-            to="/services"
+            to="/"
             className="inline-flex items-center px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            View All Tours
+            Back
           </Link>
         </div>
       </div>
@@ -260,11 +280,11 @@ const ServiceDetailPage: React.FC = () => {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <Link
-                to="/services"
+                to="/"
                 className="flex items-center text-white hover:text-teal-300 transition-all duration-200 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
-                {t.common.back} a Servicios
+                {t.common.back}
               </Link>
 
               <div className="flex items-center space-x-2">
@@ -319,7 +339,9 @@ const ServiceDetailPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-4 text-white/90">
                 <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <Clock className="w-5 h-5 mr-2" />
-                  <span className="font-medium">{tour.duration || "3-4 hours"}</span>
+                  <span className="font-medium">
+                    {tour.duration || "3-4 hours"}
+                  </span>
                 </div>
                 <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <MapPin className="w-5 h-5 mr-2" />
@@ -342,13 +364,21 @@ const ServiceDetailPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery Thumbnails */}
             {galleryImages.length > 1 && (
-              <div className="bg-white rounded-2xl shadow-xl p-6 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Photo Gallery</h3>
+              <div
+                className="bg-white rounded-2xl shadow-xl p-6 animate-fadeInUp"
+                style={{ animationDelay: "0.1s" }}
+              >
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Photo Gallery
+                </h3>
                 <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {galleryImages.slice(0, 8).map((img, idx) => (
                     <button
                       key={idx}
-                      onClick={() => { setCurrentImageIndex(idx); setGalleryOpen(true); }}
+                      onClick={() => {
+                        setCurrentImageIndex(idx);
+                        setGalleryOpen(true);
+                      }}
                       className="relative overflow-hidden rounded-xl aspect-square group"
                     >
                       <img
@@ -367,9 +397,14 @@ const ServiceDetailPage: React.FC = () => {
             {galleryOpen && (
               <div
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-                onClick={(e) => { if (e.target === e.currentTarget) setGalleryOpen(false); }}
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setGalleryOpen(false);
+                }}
               >
-                <div className="relative max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="relative max-w-5xl w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={() => setGalleryOpen(false)}
                     className="absolute top-4 right-4 text-white text-xl bg-black/30 rounded-full p-2"
@@ -381,24 +416,54 @@ const ServiceDetailPage: React.FC = () => {
                   <div className="bg-black rounded-lg overflow-hidden">
                     <div className="flex items-center justify-center relative">
                       <button
-                        onClick={() => setCurrentImageIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length)}
+                        onClick={() =>
+                          setCurrentImageIndex(
+                            (i) =>
+                              (i - 1 + galleryImages.length) %
+                              galleryImages.length
+                          )
+                        }
                         className="absolute left-2 text-white/90 bg-black/30 rounded-full p-2"
                         aria-label="Previous"
-                      >‹</button>
+                      >
+                        ‹
+                      </button>
 
-                      <img src={galleryImages[currentImageIndex]} alt={`Imagen ${currentImageIndex + 1}`} className="max-h-[70vh] mx-auto object-contain" />
+                      <img
+                        src={galleryImages[currentImageIndex]}
+                        alt={`Imagen ${currentImageIndex + 1}`}
+                        className="max-h-[70vh] mx-auto object-contain"
+                      />
 
                       <button
-                        onClick={() => setCurrentImageIndex((i) => (i + 1) % galleryImages.length)}
+                        onClick={() =>
+                          setCurrentImageIndex(
+                            (i) => (i + 1) % galleryImages.length
+                          )
+                        }
                         className="absolute right-2 text-white/90 bg-black/30 rounded-full p-2"
                         aria-label="Next"
-                      >›</button>
+                      >
+                        ›
+                      </button>
                     </div>
 
                     <div className="p-3 bg-gray-900/80 flex gap-2 overflow-x-auto">
                       {galleryImages.map((img, idx) => (
-                        <button key={idx} onClick={() => setCurrentImageIndex(idx)} className={`flex-shrink-0 border ${idx === currentImageIndex ? 'border-white' : 'border-transparent'} rounded`}>
-                          <img src={img} alt={`thumb-${idx}`} className="w-24 h-16 object-cover" />
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`flex-shrink-0 border ${
+                            idx === currentImageIndex
+                              ? "border-white"
+                              : "border-transparent"
+                          } rounded`}
+                        >
+                          <img
+                            src={img}
+                            alt={`thumb-${idx}`}
+                            className="w-24 h-16 object-cover"
+                          />
                         </button>
                       ))}
                     </div>
@@ -408,7 +473,10 @@ const ServiceDetailPage: React.FC = () => {
             )}
 
             {/* Tour Info Tabs */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
+            <div
+              className="bg-white rounded-2xl shadow-xl overflow-hidden animate-fadeInUp"
+              style={{ animationDelay: "0.2s" }}
+            >
               {/* Tab Headers */}
               <div className="flex border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                 {tabs.map((tab) => (
@@ -435,7 +503,9 @@ const ServiceDetailPage: React.FC = () => {
                   <div className="space-y-6">
                     <div
                       className="text-gray-700 leading-relaxed text-lg"
-                      dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                      dangerouslySetInnerHTML={{
+                        __html: formatTextToHtml(tour.description),
+                      }}
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                       <div className="flex items-start p-4 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-100">
@@ -443,13 +513,14 @@ const ServiceDetailPage: React.FC = () => {
                           <Clock className="w-6 h-6 text-teal-600" />
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-gray-600 mb-1">Duration</div>
+                          <div className="text-sm font-semibold text-gray-600 mb-1">
+                            Duration
+                          </div>
                           <div className="text-lg font-bold text-gray-800">
                             {tour.duration || "3-4 hours"}
                           </div>
                         </div>
                       </div>
-                    
                     </div>
                   </div>
                 )}
@@ -458,11 +529,16 @@ const ServiceDetailPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {tour.included && tour.included.length > 0 ? (
                       tour.included.map((item, index) => (
-                        <div key={index} className="flex items-start p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                        <div
+                          key={index}
+                          className="flex items-start p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100"
+                        >
                           <div className="p-2 bg-white rounded-lg shadow-sm mr-3 flex-shrink-0">
                             <Check className="w-5 h-5 text-green-600" />
                           </div>
-                          <span className="text-gray-700 font-medium pt-1">{item}</span>
+                          <span className="text-gray-700 font-medium pt-1">
+                            {item}
+                          </span>
                         </div>
                       ))
                     ) : (
@@ -521,20 +597,36 @@ const ServiceDetailPage: React.FC = () => {
                       </div>
                       <ul className="space-y-3 text-amber-800">
                         <li className="flex items-start">
-                          <span className="text-amber-600 mr-3 font-bold">•</span>
-                          <span className="font-medium">Bring sunscreen and insect repellent</span>
+                          <span className="text-amber-600 mr-3 font-bold">
+                            •
+                          </span>
+                          <span className="font-medium">
+                            Bring sunscreen and insect repellent
+                          </span>
                         </li>
                         <li className="flex items-start">
-                          <span className="text-amber-600 mr-3 font-bold">•</span>
-                          <span className="font-medium">Wear comfortable clothing and non-slip shoes</span>
+                          <span className="text-amber-600 mr-3 font-bold">
+                            •
+                          </span>
+                          <span className="font-medium">
+                            Wear comfortable clothing and non-slip shoes
+                          </span>
                         </li>
                         <li className="flex items-start">
-                          <span className="text-amber-600 mr-3 font-bold">•</span>
-                          <span className="font-medium">Bring a change of clothes for water activities</span>
+                          <span className="text-amber-600 mr-3 font-bold">
+                            •
+                          </span>
+                          <span className="font-medium">
+                            Bring a change of clothes for water activities
+                          </span>
                         </li>
                         <li className="flex items-start">
-                          <span className="text-amber-600 mr-3 font-bold">•</span>
-                          <span className="font-medium">Stay hydrated during the tour</span>
+                          <span className="text-amber-600 mr-3 font-bold">
+                            •
+                          </span>
+                          <span className="font-medium">
+                            Stay hydrated during the tour
+                          </span>
                         </li>
                       </ul>
                     </div>
@@ -559,7 +651,8 @@ const ServiceDetailPage: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Transport from your hotel is included. We will contact you to coordinate the pickup point.
+                      Transport from your hotel is included. We will contact you
+                      to coordinate the pickup point.
                     </p>
                   </div>
                 )}
@@ -572,18 +665,17 @@ const ServiceDetailPage: React.FC = () => {
             {/* Sticky Pricing Card */}
             <div className="lg:sticky lg:top-24 space-y-6">
               {/* Pricing Card */}
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-100 animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
+              <div
+                className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-100 animate-fadeInUp"
+                style={{ animationDelay: "0.3s" }}
+              >
                 <div className="bg-gradient-to-r from-teal-500 to-blue-600 p-6 text-white">
                   <div className="text-center">
-                    <div className="text-sm font-semibold uppercase tracking-wide mb-2 opacity-90">
-              
-                    </div>
+                    <div className="text-sm font-semibold uppercase tracking-wide mb-2 opacity-90"></div>
                     <div className="text-5xl font-bold mb-2">
                       {formatUSD(tour.price)}
                     </div>
-                    <p className="text-sm opacity-90">
-                      No additional fees
-                    </p>
+                    <p className="text-sm opacity-90">No additional fees</p>
                   </div>
                 </div>
 
@@ -601,20 +693,33 @@ const ServiceDetailPage: React.FC = () => {
                       <div className="w-full border-t border-gray-200"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-3 bg-white text-gray-500 font-medium">or contact us</span>
+                      <span className="px-3 bg-white text-gray-500 font-medium">
+                        or contact us
+                      </span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <a
-                      href={admin?.celular ? `tel:${admin.celular.replace(/\s+/g, '')}` : 'tel:+50432267504'}
+                      href={
+                        admin?.celular
+                          ? `tel:${admin.celular.replace(/\s+/g, "")}`
+                          : "tel:+50432267504"
+                      }
                       className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       Call
                     </a>
                     <a
-                      href={admin?.celular ? `https://wa.me/${admin.celular.replace(/[^0-9+]/g, '')}` : 'https://wa.me/50432267504'}
+                      href={
+                        admin?.celular
+                          ? `https://wa.me/${admin.celular.replace(
+                              /[^0-9+]/g,
+                              ""
+                            )}`
+                          : "https://wa.me/50432267504"
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
@@ -627,7 +732,10 @@ const ServiceDetailPage: React.FC = () => {
               </div>
 
               {/* Safety and Trust */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 shadow-lg animate-fadeInUp" style={{ animationDelay: "0.4s" }}>
+              <div
+                className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 shadow-lg animate-fadeInUp"
+                style={{ animationDelay: "0.4s" }}
+              >
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-green-100 rounded-lg mr-3">
                     <span className="text-2xl">✓</span>
@@ -637,24 +745,32 @@ const ServiceDetailPage: React.FC = () => {
                   </h3>
                 </div>
                 <div className="space-y-3">
-               
                   <div className="flex items-start">
                     <Check className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-green-800 font-medium">Certified and experienced guides</span>
+                    <span className="text-green-800 font-medium">
+                      Certified and experienced guides
+                    </span>
                   </div>
                   <div className="flex items-start">
                     <Check className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-green-800 font-medium">Liability insurance included</span>
+                    <span className="text-green-800 font-medium">
+                      Liability insurance included
+                    </span>
                   </div>
                   <div className="flex items-start">
                     <Check className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-green-800 font-medium">Over 500 satisfied adventurers</span>
+                    <span className="text-green-800 font-medium">
+                      Over 500 satisfied adventurers
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 border-2 border-gray-200 shadow-lg animate-fadeInUp" style={{ animationDelay: "0.5s" }}>
+              <div
+                className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 border-2 border-gray-200 shadow-lg animate-fadeInUp"
+                style={{ animationDelay: "0.5s" }}
+              >
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-teal-100 rounded-lg mr-3">
                     <span className="text-2xl">💬</span>
@@ -671,19 +787,25 @@ const ServiceDetailPage: React.FC = () => {
                     <div className="p-2 bg-teal-50 rounded-lg mr-3">
                       <Phone className="w-4 h-4 text-teal-600" />
                     </div>
-                    <span className="font-semibold text-gray-800">{admin?.celular ?? '+504 3226-7504'}</span>
+                    <span className="font-semibold text-gray-800">
+                      {admin?.celular ?? "+504 3226-7504"}
+                    </span>
                   </div>
                   <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
                     <div className="p-2 bg-green-50 rounded-lg mr-3">
                       <MessageCircle className="w-4 h-4 text-green-600" />
                     </div>
-                    <span className="font-semibold text-gray-800">{admin?.celular ? 'WhatsApp 24/7' : 'WhatsApp available'}</span>
+                    <span className="font-semibold text-gray-800">
+                      {admin?.celular ? "WhatsApp 24/7" : "WhatsApp available"}
+                    </span>
                   </div>
                   <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
                     <div className="p-2 bg-blue-50 rounded-lg mr-3">
                       <Clock className="w-4 h-4 text-blue-600" />
                     </div>
-                    <span className="font-semibold text-gray-800">Response within 1 hour</span>
+                    <span className="font-semibold text-gray-800">
+                      Response within 1 hour
+                    </span>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { formatTextToHtml } from "../lib/formatText";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, DollarSign, CheckCircle, ArrowLeft, Users } from "lucide-react";
+import PackagesMarquee from "../components/PackagesMarquee";
+import PolicyConfirmModal from "../components/PolicyConfirmModal";
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 interface PrivateTour {
@@ -30,6 +32,7 @@ const PrivateTourDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
 
   // autoplay carousel
   useEffect(() => {
@@ -113,15 +116,7 @@ const PrivateTourDetail: React.FC = () => {
           Back to Private Tours
         </button>
 
-        {/* Hero Section with Title */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden mb-8">
-          <div className="p-8 lg:p-10">
-            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent mb-4">
-              {tour.title}
-            </h1>
-            <div className="h-1.5 w-32 bg-gradient-to-r from-teal-600 to-blue-600 rounded-full"></div>
-          </div>
-        </div>
+        {/* Hero Section removed: title now shown inside the carousel overlay */}
 
         {/* Image Gallery - Full Width Carousel */}
         <div
@@ -130,126 +125,226 @@ const PrivateTourDetail: React.FC = () => {
           onMouseLeave={() => setPaused(false)}
         >
           <div className="relative h-[400px] lg:h-[600px] rounded-3xl overflow-hidden shadow-2xl group">
-              {images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                    selectedImage === idx
-                      ? "opacity-100 z-10 scale-100"
-                      : "opacity-0 z-0 scale-110"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt={`${tour.title} ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
-                </div>
-              ))}
+            <style>{`
+                /* Right-side large pricing panel */
+                .pricing-panel {
+                  background: linear-gradient(90deg, rgba(2,6,23,0.75), rgba(2,6,23,0.45));
+                  color: #fff;
+                  padding: 1rem 1.1rem;
+                  border-radius: 0.9rem;
+                  width: 20rem; /* 320px */
+                  max-width: calc(100% - 2rem);
+                  opacity: 0;
+                  transform: translateX(14px) scale(0.995);
+                  box-shadow: 0 20px 40px rgba(2,6,23,0.5);
+                }
+                .pricing-animate { animation: pricingAppear 680ms cubic-bezier(.2,.9,.2,1) forwards; }
+                @keyframes pricingAppear { from { opacity: 0; transform: translateX(14px) scale(0.995); } to { opacity: 1; transform: translateX(0) scale(1); } }
 
-              {/* Image Counter */}
-              <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-sm font-medium">
-                {selectedImage + 1} / {images.length}
+                .pricing-lines { display: flex; flex-direction: column; gap: 8px; }
+                .pricing-line { opacity: 0; transform: translateX(10px); }
+                .pricing-line.show { animation: lineIn 420ms cubic-bezier(.2,.9,.2,1) forwards; }
+                @keyframes lineIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+                /* Larger typography inside panel */
+                .pricing-panel .title { font-size: 16px; font-weight: 700; }
+                .pricing-panel .duration { font-size: 13px; color: #e6eef6; }
+                .pricing-panel .line-label { font-size: 15px; color: #f0f9ff; }
+                .pricing-panel .line-price { font-size: 17px; font-weight: 800; color: #7ee3c6; }
+                /* Carousel title overlay - centered, large, animated in/out */
+                .carousel-title { 
+                  max-width: 72%;
+                  padding: 0.25rem 0.5rem;
+                  pointer-events: none;
+                  opacity: 0;
+                  transform: translateY(-12px) scale(0.98);
+                  transition: opacity 420ms cubic-bezier(.2,.9,.2,1), transform 420ms cubic-bezier(.2,.9,.2,1);
+                }
+                .carousel-title .title-large { font-size: 28px; font-weight: 800; color: #ffffff; text-shadow: 0 10px 30px rgba(2,6,23,0.7); line-height: 1; }
+                .carousel-title.show { opacity: 1; transform: translateY(0) scale(1); }
+                @media (min-width: 768px) { .carousel-title .title-large { font-size: 48px; } }
+                @media (min-width: 1024px) { .carousel-title .title-large { font-size: 64px; } }
+              `}</style>
+            {images.map((img, idx) => (
+              <div
+                key={idx}
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                  selectedImage === idx
+                    ? "opacity-100 z-10 scale-100"
+                    : "opacity-0 z-0 scale-110"
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`${tour.title} ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
+
+                {/* Pricing panel - appears softly when this image is active */}
+                {selectedImage === idx && (
+                  <div
+                    className={`absolute right-6 top-1/2 -translate-y-1/2 z-30 pricing-panel pricing-animate`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="title">Pricing</div>
+                      {tour.duration && (
+                        <div className="duration">{tour.duration}</div>
+                      )}
+                    </div>
+
+                    <div className="pricing-lines">
+                      <div
+                        className={`pricing-line show`}
+                        style={{ animationDelay: `0.12s` }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="line-label">1 Person</div>
+                          <div className="line-price">
+                            ${tour.price_1_person}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`pricing-line show`}
+                        style={{ animationDelay: `0.24s` }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="line-label">2 Persons</div>
+                          <div className="line-price">
+                            ${tour.price_2_persons}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`pricing-line show`}
+                        style={{ animationDelay: `0.36s` }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="line-label">3 Persons</div>
+                          <div className="line-price">
+                            ${tour.price_3_persons}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`pricing-line show`}
+                        style={{ animationDelay: `0.48s` }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="line-label">4+ Persons</div>
+                          <div className="line-price">
+                            ${tour.price_4_persons}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`pricing-line show`}
+                        style={{ animationDelay: `0.6s` }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="line-label">Children (under 5)</div>
+                          <div className="line-price">
+                            ${tour.price_children_under_5}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Title overlay shown when this image is active */}
+                {selectedImage === idx && (
+                  <div className="absolute top-8 left-1/2 z-40 -translate-x-1/2 carousel-title show text-center">
+                    <h2 className="title-large text-3xl lg:text-6xl">
+                      {tour.title}
+                    </h2>
+                  </div>
+                )}
               </div>
+            ))}
 
-              {/* Prev/Next Controls */}
-              {images.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setSelectedImage(
-                        (s) => (s - 1 + images.length) % images.length
-                      )
-                    }
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
-                    aria-label="Previous"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15 18l-6-6 6-6"
-                      />
-                    </svg>
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      setSelectedImage((s) => (s + 1) % images.length)
-                    }
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
-                    aria-label="Next"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 6l6 6-6 6"
-                      />
-                    </svg>
-                  </button>
-                </>
-              )}
-
-              {/* Indicator Dots */}
-              {images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-                  {images.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedImage(idx)}
-                      className={`transition-all rounded-full ${
-                        selectedImage === idx
-                          ? "w-8 h-2 bg-white"
-                          : "w-2 h-2 bg-white/50 hover:bg-white/80"
-                      }`}
-                      aria-label={`Go to image ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
+            {/* Image Counter */}
+            <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-sm font-medium">
+              {selectedImage + 1} / {images.length}
             </div>
 
-          {/* Thumbnail Images */}
-          {images.length > 1 && (
-            <div className="flex justify-center gap-3 mt-6">
-              {images.map((img, idx) => (
+            {/* Prev/Next Controls */}
+            {images.length > 1 && (
+              <>
                 <button
-                  key={idx}
-                  onClick={() => setSelectedImage(idx)}
-                  className={`relative h-20 w-32 rounded-xl overflow-hidden transition-all transform ${
-                    selectedImage === idx
-                      ? "ring-4 ring-teal-500 scale-105 shadow-lg"
-                      : "opacity-60 hover:opacity-100 hover:scale-105"
-                  }`}
+                  onClick={() =>
+                    setSelectedImage(
+                      (s) => (s - 1 + images.length) % images.length
+                    )
+                  }
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                  aria-label="Previous"
                 >
-                  <img
-                    src={img}
-                    alt={`${tour.title} ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedImage === idx && (
-                    <div className="absolute inset-0 border-2 border-white/50"></div>
-                  )}
+                  <svg
+                    className="w-6 h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 18l-6-6 6-6"
+                    />
+                  </svg>
                 </button>
-              ))}
-            </div>
-          )}
+
+                <button
+                  onClick={() =>
+                    setSelectedImage((s) => (s + 1) % images.length)
+                  }
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                  aria-label="Next"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 6l6 6-6 6"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Indicator Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`transition-all rounded-full ${
+                      selectedImage === idx
+                        ? "w-8 h-2 bg-white"
+                        : "w-2 h-2 bg-white/50 hover:bg-white/80"
+                    }`}
+                    aria-label={`Go to image ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail Images removed to save space */}
         </div>
+
+        {/* Continuous Packages Carousel (infinite horizontal row) */}
+        <PackagesMarquee client={client} />
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -262,7 +357,9 @@ const PrivateTourDetail: React.FC = () => {
               </h2>
               <div
                 className="text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                dangerouslySetInnerHTML={{
+                  __html: formatTextToHtml(tour.description),
+                }}
               />
             </div>
 
@@ -340,7 +437,9 @@ const PrivateTourDetail: React.FC = () => {
                 <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
                   <div className="flex items-center">
                     <Users className="w-5 h-5 text-teal-600 mr-2" />
-                    <span className="text-gray-700 font-medium">4+ Persons</span>
+                    <span className="text-gray-700 font-medium">
+                      4+ Persons
+                    </span>
                   </div>
                   <span className="text-teal-600 font-bold text-xl">
                     ${tour.price_4_persons}
@@ -358,12 +457,21 @@ const PrivateTourDetail: React.FC = () => {
 
               {/* Book Button */}
               <button
-                onClick={() => navigate(`/private-tour/book/${tour.id}`)}
+                onClick={() => setPolicyOpen(true)}
                 className="w-full py-4 bg-gradient-to-r from-teal-600 to-blue-600 text-white text-lg font-bold rounded-xl hover:from-teal-700 hover:to-blue-700 transition-all transform hover:scale-105 hover:shadow-2xl shadow-lg"
               >
                 Book This Tour Now
               </button>
-              
+
+              <PolicyConfirmModal
+                isOpen={policyOpen}
+                onClose={() => setPolicyOpen(false)}
+                onAccept={() => {
+                  setPolicyOpen(false);
+                  navigate(`/private-tour/book/${tour.id}`);
+                }}
+              />
+
               <p className="text-center text-gray-500 text-sm mt-4">
                 Instant confirmation • Free cancellation
               </p>

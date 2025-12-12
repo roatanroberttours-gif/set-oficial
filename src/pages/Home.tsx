@@ -69,7 +69,12 @@ const Home: React.FC = () => {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2">{tour.title}</h3>
-                  <div className="text-gray-600 mb-4 line-clamp-2" dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }} />
+                  <div
+                    className="text-gray-600 mb-4 line-clamp-2"
+                    dangerouslySetInnerHTML={{
+                      __html: formatTextToHtml(tour.description),
+                    }}
+                  />
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-teal-600 font-semibold">
                       From ${tour.price_1_person}/person
@@ -105,6 +110,7 @@ const Home: React.FC = () => {
             title="Best of Roatán"
             ctaText="TripAdvisor"
             ctaHref="https://www.tripadvisor.com/Attraction_Review-g292019-d19846218-Reviews-Roatan_Robert_Tour-Roatan_Bay_Islands.html"
+            reviewsApiEndpoint={"http://localhost:3000/reviews"}
           />
 
           <FacebookWidget

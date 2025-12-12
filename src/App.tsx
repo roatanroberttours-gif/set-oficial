@@ -11,7 +11,7 @@ import PrivateTour from "./pages/PrivateTour";
 import PrivateTourDetail from "./pages/PrivateTourDetail";
 import PrivateTourBookingPage from "./pages/PrivateTourBookingPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
-import ServicesPage from "./pages/ServicesPage";
+// Services page route removed per request
 import ServiceDetailPage from "./pages/ServiceDetailPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
@@ -35,7 +35,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
-                <Route path="services" element={<ServicesPage />} />
+                {/* Services route removed. */}
                 <Route path="private-tour" element={<PrivateTour />} />
                 <Route
                   path="private-tour/:id"

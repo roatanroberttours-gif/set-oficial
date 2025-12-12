@@ -18,12 +18,14 @@ const Services: React.FC = () => {
     const loadTours = async () => {
       setLoading(true);
       try {
-        const { data, error } = await client.from('paquetes').select('*');
+        const { data, error } = await client.from("paquetes").select("*");
         if (error) throw error;
         const mapped: Tour[] = (data || []).map((paq: any) => {
           // get first non-empty image
-          const images = Array.from({ length: 10 }).map((_, i) => paq[`imagen${i+1}`]);
-          const image = images.find((img: any) => img) || '';
+          const images = Array.from({ length: 10 }).map(
+            (_, i) => paq[`imagen${i + 1}`]
+          );
+          const image = images.find((img: any) => img) || "";
           let included: string[] | undefined = undefined;
           try {
             if (paq.incluye) {
@@ -35,20 +37,20 @@ const Services: React.FC = () => {
           }
           return {
             id: String(paq.id),
-            name: paq.titulo || '',
-            description: paq.descripcion || '',
-            personPrice: paq.precio_por_persona ?? (paq.price ?? 0),
-            price: paq.precio_por_persona ?? (paq.price ?? 0),
+            name: paq.titulo || "",
+            description: paq.descripcion || "",
+            personPrice: paq.precio_por_persona ?? paq.price ?? 0,
+            price: paq.precio_por_persona ?? paq.price ?? 0,
             image: image,
-            duration: paq.duracion || '',
+            duration: paq.duracion || "",
             included,
             max_personas: paq.max_personas ?? undefined,
-            category: paq.categoria || 'adventure',
+            category: paq.categoria || "adventure",
           } as Tour;
         });
-        setTours(mapped.slice(0, 6));
+        setTours(mapped);
       } catch (err) {
-        console.error('Error loading paquetes from Supabase:', err);
+        console.error("Error loading paquetes from Supabase:", err);
       } finally {
         setLoading(false);
       }
@@ -132,11 +134,11 @@ const Services: React.FC = () => {
           {tours.map((tour, index) => (
             <div
               key={tour.id}
-              className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-2"
+              className="group overflow-hidden rounded-2xl transition-all duration-500 transform hover:-translate-y-2"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden">
+              {/* Image with overlay content */}
+              <div className="relative h-64 md:h-72 lg:h-80 overflow-hidden">
                 <img
                   src={tour.image}
                   alt={tour.name}
@@ -144,7 +146,9 @@ const Services: React.FC = () => {
                 />
                 <div className="absolute top-4 left-4">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-white text-sm font-medium bg-gradient-to-r ${getCategoryColor(tour.category || "default")}`}
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-white text-sm font-medium bg-gradient-to-r ${getCategoryColor(
+                      tour.category || "default"
+                    )}`}
                   >
                     <span className="mr-1">
                       {getCategoryIcon(tour.category || "default")}
@@ -152,81 +156,52 @@ const Services: React.FC = () => {
                     {tour.category === "water-adventure"
                       ? "Agua"
                       : tour.category === "nature"
-                        ? "Naturaleza"
-                        : tour.category === "romantic"
-                          ? "Romántico"
-                          : "Aventura"}
+                      ? "Naturaleza"
+                      : tour.category === "romantic"
+                      ? "Romántico"
+                      : "Aventura"}
                   </span>
                 </div>
-                <div className="absolute top-4 right-4">
-                
-                </div>
-              </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-teal-600 transition-colors duration-200">
-                  {tour.name}
-                </h3>
+                {/* Overlay: name, duration, price, button */}
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
+                  <h3 className="text-sm md:text-base font-semibold text-white mb-1 group-hover:text-teal-200 transition-colors duration-200">
+                    {tour.name}
+                  </h3>
 
-                <div
-                  className="text-gray-600 mb-4 line-clamp-2"
-                  dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
-                />
-
-                {/* Tour Details */}
-                <div className="space-y-2 mb-6">
-                  {tour.duration && (
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Clock className="w-4 h-4 mr-2 text-teal-500" />
-                      <span>{tour.duration}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Users className="w-4 h-4 mr-2 text-teal-500" />
-                    <span>Grupos pequeños (máx. {tour.max_personas ?? 8})</span>
+                  <div className="flex items-center text-sm text-white/90 mb-2">
+                    {tour.duration && (
+                      <div className="flex items-center mr-4">
+                        <Clock className="w-4 h-4 mr-2 text-white/90" />
+                        <span className="text-sm">{tour.duration}</span>
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Price */}
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <span className="text-2xl font-bold text-gray-800">
+                  <div className="mb-3">
+                    <span className="text-base font-bold text-white">
                       ${tour.price}
                     </span>
-                    <span className="text-gray-500 ml-1"></span>
                   </div>
-                </div>
 
-                {/* Buttons */}
-                <div className="flex space-x-3">
-                  <Link
-                    to={`/service/${tour.id}`}
-                    className="flex-1 flex items-center justify-center px-4 py-2 border border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors duration-200"
-                  >
-                    <span className="text-sm font-medium">
-                      {t.services.viewDetails}
-                    </span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-
-                  {/* Book Now removed from service cards */}
+                  <div className="flex">
+                    <Link
+                      to={`/service/${tour.id}`}
+                      className="flex items-center justify-center px-3 py-2 border border-white text-white rounded-md text-sm hover:bg-white/10 transition-colors duration-200 w-full"
+                    >
+                      <span className="text-sm font-medium mr-2">
+                        {t.services.viewDetails}
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* View All Services Button */}
-        <div className="text-center">
-          <Link
-            to="/services"
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-semibold text-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-teal-400 hover:to-blue-500"
-          >
-            Ver Todos los Tours
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Link>
-        </div>
+        {/* View All Services Button removed as requested */}
       </div>
 
       {/* Booking handled from service detail page; modal removed from cards */}
