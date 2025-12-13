@@ -39,6 +39,7 @@ const PrivateTourDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [paused, setPaused] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
+  const panelRef = React.useRef<HTMLDivElement>(null);
 
   // autoplay carousel
   useEffect(() => {
@@ -54,6 +55,54 @@ const PrivateTourDetail: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [tour, paused]);
+
+  // auto-scroll panel slowly on mobile
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+
+    let scrollDirection = 1; // 1 = down, -1 = up
+    let animationFrame: number;
+
+    const autoScroll = () => {
+      if (!panel) return;
+      
+      const maxScroll = panel.scrollHeight - panel.clientHeight;
+      if (maxScroll <= 0) return; // no scroll needed
+
+      panel.scrollTop += scrollDirection * 0.3; // slow speed
+
+      // reverse direction at boundaries
+      if (panel.scrollTop >= maxScroll) {
+        scrollDirection = -1;
+      } else if (panel.scrollTop <= 0) {
+        scrollDirection = 1;
+      }
+
+      animationFrame = requestAnimationFrame(autoScroll);
+    };
+
+    // start auto-scroll after a short delay
+    const timeout = setTimeout(() => {
+      animationFrame = requestAnimationFrame(autoScroll);
+    }, 1500);
+
+    // pause auto-scroll on user interaction
+    const handleTouchStart = () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+
+    panel.addEventListener('touchstart', handleTouchStart, { passive: true });
+
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      clearTimeout(timeout);
+      panel.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, [tour, selectedImage]);
 
   useEffect(() => {
     if (id) {
@@ -177,17 +226,49 @@ const PrivateTourDetail: React.FC = () => {
                 @media (min-width: 768px) { .carousel-title .title-large { font-size: 48px; } }
                 @media (min-width: 1024px) { .carousel-title .title-large { font-size: 64px; } }
 
-                /* Responsive adjustments: place panel at top and full-width on small screens */
+                /* Responsive adjustments: place panel at bottom and full-width on small screens
+                   Add a small scroll-indicator above the panel to hint that it is scrollable */
+                .scroll-indicator { display: none; }
                 @media (max-width: 768px) {
                   .pricing-panel {
                     position: absolute !important;
                     left: 1rem !important;
                     right: 1rem !important;
-                    top: 1rem !important;
+                    top: auto !important;
+                    bottom: 1rem !important;
                     transform: none !important;
                     width: calc(100% - 2rem) !important;
-                    max-height: 40%;
+                    max-height: 45%;
+                    padding-top: 1.1rem;
                   }
+                  .scroll-indicator {
+                    display: block;
+                    position: absolute;
+                    top: -10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 44px;
+                    height: 6px;
+                    border-radius: 999px;
+                    background: rgba(255,255,255,0.12);
+                    box-shadow: 0 6px 12px rgba(2,6,23,0.25);
+                    pointer-events: none;
+                    z-index: 40;
+                    animation: scrollHint 1400ms ease-in-out infinite;
+                  }
+                  .scroll-indicator::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 12px;
+                    height: 12px;
+                    background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+                    clip-path: polygon(50% 70%, 15% 30%, 85% 30%);
+                    opacity: 0.9;
+                  }
+                  @keyframes scrollHint { 0% { transform: translateX(-50%) translateY(0); opacity: 0.9 } 50% { transform: translateX(-50%) translateY(4px); opacity: 0.6 } 100% { transform: translateX(-50%) translateY(0); opacity: 0.9 } }
                 }
               `}</style>
             {images.map((img, idx) => (
@@ -210,8 +291,11 @@ const PrivateTourDetail: React.FC = () => {
                 {/* Dynamic panel based on image index */}
                 {selectedImage === idx && (
                   <div
+                    ref={panelRef}
                     className={`absolute right-6 top-6 z-30 pricing-panel pricing-animate`}
                   >
+                    {/* Scroll hint for mobile: visible only on small screens via CSS */}
+                    <div className="scroll-indicator" aria-hidden="true" />
                     {/* Image 1: Activities */}
                     {idx === 0 && (
                       <>
