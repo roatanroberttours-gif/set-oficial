@@ -68,7 +68,7 @@ const AdminPanel: React.FC = () => {
       iconColor: "text-blue-600",
     },
     {
-      title: "Manage Tours",
+      title: "Manage Tours Aditions",
       description: "Add, edit or remove tour packages",
       icon: Package,
       href: "/paquetes",
@@ -112,15 +112,7 @@ const AdminPanel: React.FC = () => {
       bgColor: "bg-pink-50",
       iconColor: "text-pink-600",
     },
-    {
-      title: "Additional Options",
-      description: "Manage tour additional options",
-      icon: List,
-      href: "/admin/additional-options",
-      color: "from-indigo-500 to-purple-600",
-      bgColor: "bg-indigo-50",
-      iconColor: "text-indigo-600",
-    },
+  
   ];
 
   const statCards = [

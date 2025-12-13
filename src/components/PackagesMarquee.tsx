@@ -186,7 +186,8 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
               tabIndex={0}
               onClick={() => navigate(`/service/${pkg.id}`)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") navigate(`/service/${pkg.id}`);
+                if (e.key === "Enter" || e.key === " ")
+                  navigate(`/service/${pkg.id}`);
               }}
               className="w-64 flex-shrink-0 rounded-lg overflow-hidden shadow-md relative cursor-pointer"
             >
