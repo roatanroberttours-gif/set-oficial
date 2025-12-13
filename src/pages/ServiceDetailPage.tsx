@@ -279,13 +279,13 @@ const ServiceDetailPage: React.FC = () => {
         <div className="absolute top-0 left-0 right-0 z-20 pt-24 pb-6">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
-              <Link
-                to="/"
+              <button
+                onClick={() => navigate(-1)}
                 className="flex items-center text-white hover:text-teal-300 transition-all duration-200 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 {t.common.back}
-              </Link>
+              </button>
 
               <div className="flex items-center space-x-2">
                 <button
@@ -680,13 +680,7 @@ const ServiceDetailPage: React.FC = () => {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <button
-                    onClick={() => setShowPolicyModal(true)}
-                    className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl shadow-lg"
-                  >
-                    <Calendar className="w-5 h-5 inline mr-2" />
-                    Book Now
-                  </button>
+                  {/* Book Now removed — booking flow handled elsewhere */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
