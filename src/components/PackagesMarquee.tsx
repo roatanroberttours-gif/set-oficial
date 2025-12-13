@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
   const clientRef = client ?? useSupabaseSet();
   const [packages, setPackages] = useState<any[]>([]);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [jsActive, setJsActive] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -24,6 +27,73 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
     };
   }, [clientRef]);
 
+  // JS-driven infinite scroll for mobile devices
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    const track = trackRef.current;
+    if (!wrapper || !track) return;
+
+    const mq = window.matchMedia('(max-width: 768px)');
+    if (!mq.matches) {
+      setJsActive(false);
+      return;
+    }
+
+    setJsActive(true);
+
+    // ensure wrapper is scrolled a little to initialize
+    wrapper.scrollLeft = 0;
+
+    let rafId: number | null = null;
+    const speed = 0.6; // px per frame, tweakable
+
+    const step = () => {
+      if (!wrapper || !track) return;
+      const half = track.scrollWidth / 2;
+      wrapper.scrollLeft += speed;
+      if (wrapper.scrollLeft >= half) {
+        // seamless reset
+        wrapper.scrollLeft -= half;
+      }
+      rafId = requestAnimationFrame(step);
+    };
+
+    const start = () => {
+      if (rafId != null) return;
+      rafId = requestAnimationFrame(step);
+    };
+    const stop = () => {
+      if (rafId != null) cancelAnimationFrame(rafId);
+      rafId = null;
+    };
+
+    const onInteraction = () => stop();
+    wrapper.addEventListener('touchstart', onInteraction, { passive: true });
+    wrapper.addEventListener('pointerdown', onInteraction);
+
+    start();
+
+    const onResize = () => {
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        stop();
+        setJsActive(false);
+      } else {
+        setJsActive(true);
+        start();
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      stop();
+      wrapper.removeEventListener('touchstart', onInteraction);
+      wrapper.removeEventListener('pointerdown', onInteraction);
+      window.removeEventListener('resize', onResize);
+      setJsActive(false);
+    };
+  }, [packages]);
+
   if (!packages || packages.length === 0) return null;
 
   // duplicate to create seamless infinite scroll
@@ -39,6 +109,16 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
           100% { transform: translateX(-50%); }
         }
         .marquee-animate { animation: marquee 30s linear infinite; }
+        /* Mobile: use JS-driven smooth scroll for a true infinite effect; make items responsive */
+        @media (max-width: 768px) {
+          .marquee-track { gap: 0.5rem; }
+          .marquee-wrapper { padding-left: 0.5rem; padding-right: 0.5rem; }
+          .marquee-track > div { width: calc(72vw); flex: 0 0 auto; }
+          .marquee-track > div .h-40 { height: calc(48vw); }
+          /* When JS takes control we disable the CSS animation and allow horizontal scrolling */
+          .js-active .marquee-track { animation: none !important; }
+          .js-active .marquee-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        }
         /* Keep animating when hovered */
         .marquee-animate:hover { animation-play-state: running !important; }
 
@@ -66,8 +146,8 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
         }
       `}</style>
 
-      <div className="marquee-wrapper">
-        <div className="marquee-track marquee-animate">
+      <div ref={wrapperRef} className={`marquee-wrapper ${jsActive ? 'js-active' : ''}`}>
+        <div ref={trackRef} className="marquee-track marquee-animate">
           {items.map((pkg, idx) => (
             <div
               key={`${pkg.id}-${idx}`}
@@ -109,8 +189,10 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
           ))}
         </div>
       </div>
+      {/* JS infinite scroll on mobile */}
     </section>
   );
 };
 
 export default PackagesMarquee;
+
