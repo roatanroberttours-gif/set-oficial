@@ -22,6 +22,12 @@ interface PrivateTour {
   duration: string;
   tour_notes: string;
   show_additional_options: boolean;
+  available_days?: string[];
+  activity_1?: string;
+  activity_2?: string;
+  activity_3?: string;
+  activity_4?: string;
+  summary?: string;
 }
 
 const PrivateTourDetail: React.FC = () => {
@@ -44,7 +50,7 @@ const PrivateTourDetail: React.FC = () => {
       if (!paused) {
         setSelectedImage((i) => (i + 1) % images.length);
       }
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [tour, paused]);
@@ -182,75 +188,124 @@ const PrivateTourDetail: React.FC = () => {
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
 
-                {/* Pricing panel - appears softly when this image is active */}
+                {/* Dynamic panel based on image index */}
                 {selectedImage === idx && (
                   <div
                     className={`absolute right-6 top-1/2 -translate-y-1/2 z-30 pricing-panel pricing-animate`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="title">Pricing</div>
-                      {tour.duration && (
-                        <div className="duration">{tour.duration}</div>
-                      )}
-                    </div>
+                    {/* Image 1: Activities */}
+                    {idx === 0 && (
+                      <>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="title">What Will We Do?</div>
+                          {tour.duration && (
+                            <div className="duration">{tour.duration}</div>
+                          )}
+                        </div>
+                        <div className="pricing-lines">
+                          {[tour.activity_1, tour.activity_2, tour.activity_3, tour.activity_4]
+                            .filter(Boolean)
+                            .map((activity, i) => (
+                              <div
+                                key={i}
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `${(i + 1) * 0.12}s` }}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <span className="text-teal-400 font-bold">{i + 1}.</span>
+                                  <div className="line-label flex-1">{activity}</div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </>
+                    )}
 
-                    <div className="pricing-lines">
-                      <div
-                        className={`pricing-line show`}
-                        style={{ animationDelay: `0.12s` }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="line-label">1 Person</div>
-                          <div className="line-price">
-                            ${tour.price_1_person}
+                    {/* Image 2: Summary */}
+                    {idx === 1 && tour.summary && (
+                      <>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="title">Summary</div>
+                          {tour.duration && (
+                            <div className="duration">{tour.duration}</div>
+                          )}
+                        </div>
+                        <div className="pricing-lines">
+                          <div className="pricing-line show text-sm leading-relaxed">
+                            {tour.summary}
                           </div>
                         </div>
-                      </div>
-                      <div
-                        className={`pricing-line show`}
-                        style={{ animationDelay: `0.24s` }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="line-label">2 Persons</div>
-                          <div className="line-price">
-                            ${tour.price_2_persons}
+                      </>
+                    )}
+
+                    {/* Image 3: Pricing */}
+                    {idx === 2 && (
+                      <>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="title">Pricing</div>
+                          {tour.duration && (
+                            <div className="duration">{tour.duration}</div>
+                          )}
+                        </div>
+                        <div className="pricing-lines">
+                          <div
+                            className={`pricing-line show`}
+                            style={{ animationDelay: `0.12s` }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="line-label">1 Person</div>
+                              <div className="line-price">
+                                ${tour.price_1_person}
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`pricing-line show`}
+                            style={{ animationDelay: `0.24s` }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="line-label">2 Persons</div>
+                              <div className="line-price">
+                                ${tour.price_2_persons}
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`pricing-line show`}
+                            style={{ animationDelay: `0.36s` }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="line-label">3 Persons</div>
+                              <div className="line-price">
+                                ${tour.price_3_persons}
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`pricing-line show`}
+                            style={{ animationDelay: `0.48s` }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="line-label">4+ Persons</div>
+                              <div className="line-price">
+                                ${tour.price_4_persons}
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`pricing-line show`}
+                            style={{ animationDelay: `0.6s` }}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="line-label">Children (under 5)</div>
+                              <div className="line-price">
+                                ${tour.price_children_under_5}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div
-                        className={`pricing-line show`}
-                        style={{ animationDelay: `0.36s` }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="line-label">3 Persons</div>
-                          <div className="line-price">
-                            ${tour.price_3_persons}
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        className={`pricing-line show`}
-                        style={{ animationDelay: `0.48s` }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="line-label">4+ Persons</div>
-                          <div className="line-price">
-                            ${tour.price_4_persons}
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        className={`pricing-line show`}
-                        style={{ animationDelay: `0.6s` }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="line-label">Children (under 5)</div>
-                          <div className="line-price">
-                            ${tour.price_children_under_5}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -350,6 +405,26 @@ const PrivateTourDetail: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Description */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Available Days */}
+            {tour.available_days && tour.available_days.length > 0 && (
+              <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-2xl shadow-lg p-6 border border-teal-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                  <span className="text-2xl mr-2">📅</span>
+                  Available Days
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {tour.available_days.map((day) => (
+                    <span
+                      key={day}
+                      className="inline-flex items-center px-4 py-2 bg-white rounded-full text-sm font-semibold text-teal-700 shadow-sm border border-teal-200"
+                    >
+                      {day}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
                 <span className="w-2 h-8 bg-gradient-to-b from-teal-600 to-blue-600 rounded-full mr-3"></span>

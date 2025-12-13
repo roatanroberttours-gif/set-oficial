@@ -79,12 +79,22 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
 
   const [tourData, setTourData] = useState<any | null>(null);
   const [perPersonPrice, setPerPersonPrice] = useState<number | null>(null);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
 
   useEffect(() => {
     if (showAdditionalOptions) {
       loadAdditionalOptions();
     }
   }, [showAdditionalOptions]);
+
+  // Helper function to check if a date is valid based on available days
+  const isDateAvailable = (dateStr: string): boolean => {
+    if (!availableDays || availableDays.length === 0) return true;
+    const date = new Date(dateStr + 'T00:00:00');
+    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const dayName = dayNames[date.getDay()];
+    return availableDays.includes(dayName);
+  };
 
   useEffect(() => {
     // Load meeting points for Cruise Ship / Resort selection
@@ -125,6 +135,10 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
         if (!privateError && privateData) {
           if (!mounted) return;
           setTourData(privateData);
+          // Store available days for date validation
+          if (privateData.available_days && Array.isArray(privateData.available_days)) {
+            setAvailableDays(privateData.available_days);
+          }
           // Determine per-person price from tiered fields
           const num = Number(formData.numberOfGuestsAge5Up) || 1;
           let per: number | null = null;
@@ -723,14 +737,24 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
                   required
                   value={formData.requestedTourDate}
                   min={todayStr}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedDate = e.target.value;
+                    if (selectedDate && !isDateAvailable(selectedDate)) {
+                      alert(`This tour is only available on: ${availableDays.join(', ')}. Please select a valid date.`);
+                      return;
+                    }
                     setFormData({
                       ...formData,
-                      requestedTourDate: e.target.value,
-                    })
-                  }
+                      requestedTourDate: selectedDate,
+                    });
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
+                {availableDays.length > 0 && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    📅 Available days: <span className="font-semibold text-teal-600">{availableDays.join(', ')}</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>

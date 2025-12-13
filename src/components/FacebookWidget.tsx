@@ -1,5 +1,5 @@
-import React from 'react';
-import './FacebookWidget.css';
+import React from "react";
+import "./FacebookWidget.css";
 
 interface FacebookWidgetProps {
   profileImage?: string;
@@ -14,21 +14,20 @@ interface FacebookWidgetProps {
 }
 
 const FacebookWidget = ({
-  profileImage = '/images/logo.webp',
-  name = 'Roatan Robert Tours',
-  followers = '12.3k',
-  likes = '8.4k',
-  info = 'Tours, snorkeling, and island adventures in Roatán. Contact us for private tours and group discounts.',
-  link = 'https://www.facebook.com/share/17UcBueTar/',
-  image = '/images/fbroa.jpg',
+  profileImage = "/images/logo.webp",
+  name = "Roatan Robert Tours",
+  followers = "12.3k",
+  likes = "8.4k",
+  info = "Tours, snorkeling, and island adventures in Roatán. Contact us for private tours and group discounts.",
+  link = "https://www.facebook.com/share/17UcBueTar/",
+  image = "/images/fbroa.jpg",
   images = undefined,
-  profile = '/images/logo.webp',
+  profile = "/images/logo.webp",
 }: FacebookWidgetProps) => {
   const displayed = images && images.length > 0 ? images[0] : image;
 
   return (
     <div className="fb-widget" role="region" aria-label="Facebook widget">
-
       {/* Imagen única */}
       <div className="fb-image">
         <img src={image} alt={`${name} main`} />
@@ -55,12 +54,12 @@ const FacebookWidget = ({
         </div>
       </div>
 
-      <div className="fb-body">
-        {info}
-      </div>
+      <div className="fb-body">{info}</div>
 
       <div className="fb-cta">
-        <a href={link} target="_blank" rel="noopener noreferrer">Share / Visit on Facebook</a>
+        <a href={link} target="_blank" rel="noopener noreferrer">
+          Share / Visit on Facebook
+        </a>
       </div>
     </div>
   );

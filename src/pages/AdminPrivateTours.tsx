@@ -28,6 +28,12 @@ interface PrivateTour {
   duration: string;
   tour_notes: string;
   show_additional_options: boolean;
+  available_days?: string[];
+  activity_1?: string;
+  activity_2?: string;
+  activity_3?: string;
+  activity_4?: string;
+  summary?: string;
 }
 
 const AdminPrivateTours: React.FC = () => {
@@ -52,6 +58,12 @@ const AdminPrivateTours: React.FC = () => {
     duration: "",
     tour_notes: "",
     show_additional_options: false,
+    available_days: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"],
+    activity_1: "",
+    activity_2: "",
+    activity_3: "",
+    activity_4: "",
+    summary: "",
   };
 
   useEffect(() => {
@@ -520,6 +532,89 @@ const AdminPrivateTours: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Additional notes or important information"
               />
+            </div>
+
+            {/* Summary */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Summary (max 100 characters)
+              </label>
+              <textarea
+                value={editingTour.summary || ""}
+                onChange={(e) => {
+                  const value = e.target.value.slice(0, 100);
+                  setEditingTour({ ...editingTour, summary: value });
+                }}
+                maxLength={100}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                placeholder="Brief tour summary (will be shown in carousel)"
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                {(editingTour.summary || "").length}/100 characters
+              </div>
+            </div>
+
+            {/* Activities */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                What Will We Do? (Tour Activities)
+              </label>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((num) => (
+                  <div key={num}>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      Actividad {num}
+                    </label>
+                    <input
+                      type="text"
+                      value={editingTour[`activity_${num}` as keyof PrivateTour] as string || ""}
+                      onChange={(e) =>
+                        setEditingTour({
+                          ...editingTour,
+                          [`activity_${num}`]: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      placeholder={`Describe activity ${num}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Available Days */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Available Days
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].map((day) => (
+                  <label
+                    key={day}
+                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={(editingTour.available_days || []).includes(day)}
+                      onChange={(e) => {
+                        const currentDays = editingTour.available_days || [];
+                        const newDays = e.target.checked
+                          ? [...currentDays, day]
+                          : currentDays.filter((d) => d !== day);
+                        setEditingTour({
+                          ...editingTour,
+                          available_days: newDays,
+                        });
+                      }}
+                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {day}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Show Additional Options */}
