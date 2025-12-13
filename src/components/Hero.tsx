@@ -78,15 +78,8 @@ const Hero: React.FC = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fadeInUp"
             style={{ animationDelay: "0.8s" }}
           >
-            <button
-              onClick={() => setShowBookingModal(true)}
-              className="group bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:from-teal-400 hover:to-blue-500"
-            >
-              <span className="flex items-center justify-center">
-                <Calendar className="w-5 h-5 mr-2 group-hover:animate-bounce" />
-                {t.hero.cta}
-              </span>
-            </button>
+        
+            
 
            
           </div>
