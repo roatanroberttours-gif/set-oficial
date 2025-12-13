@@ -62,7 +62,7 @@ const PrivateTourDetail: React.FC = () => {
     const panel = panelRef.current;
     if (!panel) return;
 
-    const mq = window.matchMedia('(max-width: 768px)');
+    const mq = window.matchMedia("(max-width: 768px)");
     if (!mq.matches) return; // only on small screens
 
     let rafId: number | null = null;
@@ -81,17 +81,20 @@ const PrivateTourDetail: React.FC = () => {
           return;
         }
         const maxTranslate = 10; // px
-        const current = Number(inner.style.getPropertyValue('--ty') || 0);
+        const current = Number(inner.style.getPropertyValue("--ty") || 0);
         let next = current + direction * 0.15; // smaller step
         if (next >= maxTranslate) direction = -1;
         else if (next <= -maxTranslate) direction = 1;
-        inner.style.setProperty('--ty', `${next}`);
+        inner.style.setProperty("--ty", `${next}`);
         inner.style.transform = `translateY(${next}px)`;
         rafId = requestAnimationFrame(step);
         return;
       }
 
-      panel.scrollTop = Math.min(Math.max(panel.scrollTop + direction * speed, 0), maxScroll);
+      panel.scrollTop = Math.min(
+        Math.max(panel.scrollTop + direction * speed, 0),
+        maxScroll
+      );
 
       if (panel.scrollTop >= maxScroll - 0.5) direction = -1;
       else if (panel.scrollTop <= 0.5) direction = 1;
@@ -114,22 +117,23 @@ const PrivateTourDetail: React.FC = () => {
 
     const onInteraction = () => stop();
     const onResize = () => {
-      if (window.matchMedia('(max-width: 768px)').matches) start(); else stop();
+      if (window.matchMedia("(max-width: 768px)").matches) start();
+      else stop();
     };
 
-    panel.addEventListener('touchstart', onInteraction, { passive: true });
-    panel.addEventListener('pointerdown', onInteraction);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
+    panel.addEventListener("touchstart", onInteraction, { passive: true });
+    panel.addEventListener("pointerdown", onInteraction);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
 
     start();
 
     return () => {
       stop();
-      panel.removeEventListener('touchstart', onInteraction);
-      panel.removeEventListener('pointerdown', onInteraction);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
+      panel.removeEventListener("touchstart", onInteraction);
+      panel.removeEventListener("pointerdown", onInteraction);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
     };
   }, [tour, selectedImage]);
 
@@ -326,130 +330,132 @@ const PrivateTourDetail: React.FC = () => {
                     {/* Scroll hint for mobile: visible only on small screens via CSS */}
                     <div className="scroll-indicator" aria-hidden="true" />
                     <div ref={innerRef} className="panel-inner">
-                    {/* Image 1: Activities */}
-                    {idx === 0 && (
-                      <>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="title">What Will We Do?</div>
-                          {tour.duration && (
-                            <div className="duration">{tour.duration}</div>
-                          )}
-                        </div>
-                        <div className="pricing-lines">
-                          {[
-                            tour.activity_1,
-                            tour.activity_2,
-                            tour.activity_3,
-                            tour.activity_4,
-                          ]
-                            .filter(Boolean)
-                            .map((activity, i) => (
-                              <div
-                                key={i}
-                                className={`pricing-line show`}
-                                style={{ animationDelay: `${(i + 1) * 0.12}s` }}
-                              >
-                                <div className="flex items-start gap-2">
-                                  <span className="text-teal-400 font-bold">
-                                    {i + 1}.
-                                  </span>
-                                  <div className="line-label flex-1">
-                                    {activity}
+                      {/* Image 1: Activities */}
+                      {idx === 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="title">What Will We Do?</div>
+                            {tour.duration && (
+                              <div className="duration">{tour.duration}</div>
+                            )}
+                          </div>
+                          <div className="pricing-lines">
+                            {[
+                              tour.activity_1,
+                              tour.activity_2,
+                              tour.activity_3,
+                              tour.activity_4,
+                            ]
+                              .filter(Boolean)
+                              .map((activity, i) => (
+                                <div
+                                  key={i}
+                                  className={`pricing-line show`}
+                                  style={{
+                                    animationDelay: `${(i + 1) * 0.12}s`,
+                                  }}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-teal-400 font-bold">
+                                      {i + 1}.
+                                    </span>
+                                    <div className="line-label flex-1">
+                                      {activity}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                        </div>
-                      </>
-                    )}
+                              ))}
+                          </div>
+                        </>
+                      )}
 
-                    {/* Image 2: Summary */}
-                    {idx === 1 && tour.summary && (
-                      <>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="title">Summary</div>
-                          {tour.duration && (
-                            <div className="duration">{tour.duration}</div>
-                          )}
-                        </div>
-                        <div className="pricing-lines">
-                          <div className="pricing-line show text-sm leading-relaxed">
-                            {tour.summary}
+                      {/* Image 2: Summary */}
+                      {idx === 1 && tour.summary && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="title">Summary</div>
+                            {tour.duration && (
+                              <div className="duration">{tour.duration}</div>
+                            )}
                           </div>
-                        </div>
-                      </>
-                    )}
+                          <div className="pricing-lines">
+                            <div className="pricing-line show text-sm leading-relaxed">
+                              {tour.summary}
+                            </div>
+                          </div>
+                        </>
+                      )}
 
-                    {/* Image 3: Pricing */}
-                    {idx === 2 && (
-                      <>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="title">Pricing</div>
-                          {tour.duration && (
-                            <div className="duration">{tour.duration}</div>
-                          )}
-                        </div>
-                        <div className="pricing-lines">
-                          <div
-                            className={`pricing-line show`}
-                            style={{ animationDelay: `0.12s` }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="line-label">1 Person</div>
-                              <div className="line-price">
-                                ${tour.price_1_person}
+                      {/* Image 3: Pricing */}
+                      {idx === 2 && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="title">Pricing</div>
+                            {tour.duration && (
+                              <div className="duration">{tour.duration}</div>
+                            )}
+                          </div>
+                          <div className="pricing-lines">
+                            <div
+                              className={`pricing-line show`}
+                              style={{ animationDelay: `0.12s` }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="line-label">1 Person</div>
+                                <div className="line-price">
+                                  ${tour.price_1_person}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              className={`pricing-line show`}
+                              style={{ animationDelay: `0.24s` }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="line-label">2 Persons</div>
+                                <div className="line-price">
+                                  ${tour.price_2_persons}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              className={`pricing-line show`}
+                              style={{ animationDelay: `0.36s` }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="line-label">3 Persons</div>
+                                <div className="line-price">
+                                  ${tour.price_3_persons}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              className={`pricing-line show`}
+                              style={{ animationDelay: `0.48s` }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="line-label">4+ Persons</div>
+                                <div className="line-price">
+                                  ${tour.price_4_persons}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              className={`pricing-line show`}
+                              style={{ animationDelay: `0.6s` }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="line-label">
+                                  Children (under 5)
+                                </div>
+                                <div className="line-price">
+                                  ${tour.price_children_under_5}
+                                </div>
                               </div>
                             </div>
                           </div>
-                          <div
-                            className={`pricing-line show`}
-                            style={{ animationDelay: `0.24s` }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="line-label">2 Persons</div>
-                              <div className="line-price">
-                                ${tour.price_2_persons}
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`pricing-line show`}
-                            style={{ animationDelay: `0.36s` }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="line-label">3 Persons</div>
-                              <div className="line-price">
-                                ${tour.price_3_persons}
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`pricing-line show`}
-                            style={{ animationDelay: `0.48s` }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="line-label">4+ Persons</div>
-                              <div className="line-price">
-                                ${tour.price_4_persons}
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`pricing-line show`}
-                            style={{ animationDelay: `0.6s` }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="line-label">
-                                Children (under 5)
-                              </div>
-                              <div className="line-price">
-                                ${tour.price_children_under_5}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

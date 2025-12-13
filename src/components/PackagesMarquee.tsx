@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSupabaseSet } from "../hooks/supabaseset";
 
 const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
@@ -7,6 +8,7 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [jsActive, setJsActive] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -180,7 +182,13 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
           {items.map((pkg, idx) => (
             <div
               key={`${pkg.id}-${idx}`}
-              className="w-64 flex-shrink-0 rounded-lg overflow-hidden shadow-md relative"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/service/${pkg.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") navigate(`/service/${pkg.id}`);
+              }}
+              className="w-64 flex-shrink-0 rounded-lg overflow-hidden shadow-md relative cursor-pointer"
             >
               <div className="h-40 w-full overflow-hidden relative">
                 <img
