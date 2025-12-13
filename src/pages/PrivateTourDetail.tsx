@@ -40,6 +40,7 @@ const PrivateTourDetail: React.FC = () => {
   const [paused, setPaused] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const innerRef = React.useRef<HTMLDivElement>(null);
 
   // autoplay carousel
   useEffect(() => {
@@ -61,46 +62,74 @@ const PrivateTourDetail: React.FC = () => {
     const panel = panelRef.current;
     if (!panel) return;
 
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    if (!mq.matches) return; // only on small screens
 
-    let scrollDirection = 1; // 1 = down, -1 = up
-    let animationFrame: number;
+    let rafId: number | null = null;
+    let direction = 1;
+    const speed = 0.35; // px per frame (slightly faster)
 
-    const autoScroll = () => {
+    const step = () => {
       if (!panel) return;
-      
       const maxScroll = panel.scrollHeight - panel.clientHeight;
-      if (maxScroll <= 0) return; // no scroll needed
 
-      panel.scrollTop += scrollDirection * 0.3; // slow speed
-
-      // reverse direction at boundaries
-      if (panel.scrollTop >= maxScroll) {
-        scrollDirection = -1;
-      } else if (panel.scrollTop <= 0) {
-        scrollDirection = 1;
+      if (maxScroll <= 0) {
+        // fallback: animate inner content translateY slightly to simulate motion
+        const inner = innerRef.current;
+        if (!inner) {
+          rafId = requestAnimationFrame(step);
+          return;
+        }
+        const maxTranslate = 10; // px
+        const current = Number(inner.style.getPropertyValue('--ty') || 0);
+        let next = current + direction * 0.15; // smaller step
+        if (next >= maxTranslate) direction = -1;
+        else if (next <= -maxTranslate) direction = 1;
+        inner.style.setProperty('--ty', `${next}`);
+        inner.style.transform = `translateY(${next}px)`;
+        rafId = requestAnimationFrame(step);
+        return;
       }
 
-      animationFrame = requestAnimationFrame(autoScroll);
+      panel.scrollTop = Math.min(Math.max(panel.scrollTop + direction * speed, 0), maxScroll);
+
+      if (panel.scrollTop >= maxScroll - 0.5) direction = -1;
+      else if (panel.scrollTop <= 0.5) direction = 1;
+
+      rafId = requestAnimationFrame(step);
     };
 
-    // start auto-scroll after a short delay
-    const timeout = setTimeout(() => {
-      animationFrame = requestAnimationFrame(autoScroll);
-    }, 1500);
-
-    // pause auto-scroll on user interaction
-    const handleTouchStart = () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
+    const start = () => {
+      if (rafId != null) return;
+      // small delay before starting
+      setTimeout(() => {
+        rafId = requestAnimationFrame(step);
+      }, 800);
     };
 
-    panel.addEventListener('touchstart', handleTouchStart, { passive: true });
+    const stop = () => {
+      if (rafId != null) cancelAnimationFrame(rafId);
+      rafId = null;
+    };
+
+    const onInteraction = () => stop();
+    const onResize = () => {
+      if (window.matchMedia('(max-width: 768px)').matches) start(); else stop();
+    };
+
+    panel.addEventListener('touchstart', onInteraction, { passive: true });
+    panel.addEventListener('pointerdown', onInteraction);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+
+    start();
 
     return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-      clearTimeout(timeout);
-      panel.removeEventListener('touchstart', handleTouchStart);
+      stop();
+      panel.removeEventListener('touchstart', onInteraction);
+      panel.removeEventListener('pointerdown', onInteraction);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
     };
   }, [tour, selectedImage]);
 
@@ -296,6 +325,7 @@ const PrivateTourDetail: React.FC = () => {
                   >
                     {/* Scroll hint for mobile: visible only on small screens via CSS */}
                     <div className="scroll-indicator" aria-hidden="true" />
+                    <div ref={innerRef} className="panel-inner">
                     {/* Image 1: Activities */}
                     {idx === 0 && (
                       <>
@@ -420,6 +450,7 @@ const PrivateTourDetail: React.FC = () => {
                         </div>
                       </>
                     )}
+                    </div>
                   </div>
                 )}
 
