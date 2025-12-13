@@ -33,7 +33,7 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
     const track = trackRef.current;
     if (!wrapper || !track) return;
 
-    const mq = window.matchMedia('(max-width: 768px)');
+    const mq = window.matchMedia("(max-width: 768px)");
     if (!mq.matches) {
       setJsActive(false);
       return;
@@ -67,14 +67,32 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
       rafId = null;
     };
 
-    const onInteraction = () => stop();
-    wrapper.addEventListener('touchstart', onInteraction, { passive: true });
-    wrapper.addEventListener('pointerdown', onInteraction);
+    let resumeTimeout: number | null = null;
+    const onInteraction = () => {
+      stop();
+      if (resumeTimeout) {
+        clearTimeout(resumeTimeout);
+        resumeTimeout = null;
+      }
+    };
+    const onInteractionEnd = () => {
+      // resume after short idle
+      resumeTimeout = window.setTimeout(() => {
+        start();
+      }, 1200) as unknown as number;
+    };
+
+    wrapper.addEventListener("touchstart", onInteraction, { passive: true });
+    wrapper.addEventListener("pointerdown", onInteraction);
+    wrapper.addEventListener("touchend", onInteractionEnd);
+    wrapper.addEventListener("pointerup", onInteractionEnd);
+    wrapper.addEventListener("mouseup", onInteractionEnd);
+    wrapper.addEventListener("mouseleave", onInteractionEnd);
 
     start();
 
     const onResize = () => {
-      if (!window.matchMedia('(max-width: 768px)').matches) {
+      if (!window.matchMedia("(max-width: 768px)").matches) {
         stop();
         setJsActive(false);
       } else {
@@ -83,13 +101,18 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
       }
     };
 
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
 
     return () => {
       stop();
-      wrapper.removeEventListener('touchstart', onInteraction);
-      wrapper.removeEventListener('pointerdown', onInteraction);
-      window.removeEventListener('resize', onResize);
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      wrapper.removeEventListener("touchstart", onInteraction);
+      wrapper.removeEventListener("pointerdown", onInteraction);
+      wrapper.removeEventListener("touchend", onInteractionEnd);
+      wrapper.removeEventListener("pointerup", onInteractionEnd);
+      wrapper.removeEventListener("mouseup", onInteractionEnd);
+      wrapper.removeEventListener("mouseleave", onInteractionEnd);
+      window.removeEventListener("resize", onResize);
       setJsActive(false);
     };
   }, [packages]);
@@ -115,9 +138,12 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
           .marquee-wrapper { padding-left: 0.5rem; padding-right: 0.5rem; }
           .marquee-track > div { width: calc(72vw); flex: 0 0 auto; }
           .marquee-track > div .h-40 { height: calc(48vw); }
-          /* When JS takes control we disable the CSS animation and allow horizontal scrolling */
-          .js-active .marquee-track { animation: none !important; }
-          .js-active .marquee-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          /* When JS takes control we disable the CSS animation and allow horizontal scrolling on the wrapper itself */
+          .marquee-wrapper.js-active .marquee-track { animation: none !important; }
+          .marquee-wrapper.js-active { overflow-x: auto; -webkit-overflow-scrolling: touch; cursor: grab; }
+          .marquee-wrapper.js-active:active { cursor: grabbing; }
+          .marquee-wrapper.js-active::-webkit-scrollbar { height: 8px; }
+          .marquee-wrapper.js-active::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 999px; }
         }
         /* Keep animating when hovered */
         .marquee-animate:hover { animation-play-state: running !important; }
@@ -146,7 +172,10 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
         }
       `}</style>
 
-      <div ref={wrapperRef} className={`marquee-wrapper ${jsActive ? 'js-active' : ''}`}>
+      <div
+        ref={wrapperRef}
+        className={`marquee-wrapper ${jsActive ? "js-active" : ""}`}
+      >
         <div ref={trackRef} className="marquee-track marquee-animate">
           {items.map((pkg, idx) => (
             <div
@@ -195,4 +224,3 @@ const PackagesMarquee: React.FC<{ client?: any }> = ({ client }) => {
 };
 
 export default PackagesMarquee;
-
