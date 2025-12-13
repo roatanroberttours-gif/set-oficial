@@ -132,22 +132,28 @@ const PrivateTourDetail: React.FC = () => {
         >
           <div className="relative h-[400px] lg:h-[600px] rounded-3xl overflow-hidden shadow-2xl group">
             <style>{`
-                /* Right-side large pricing panel */
+                /* Top-right panel constrained to the image area */
                 .pricing-panel {
-                  background: linear-gradient(90deg, rgba(2,6,23,0.75), rgba(2,6,23,0.45));
+                  background: linear-gradient(90deg, rgba(2,6,23,0.92), rgba(2,6,23,0.6));
                   color: #fff;
-                  padding: 1rem 1.1rem;
-                  border-radius: 0.9rem;
-                  width: 20rem; /* 320px */
+                  padding: 0.9rem 1rem;
+                  border-radius: 0.8rem;
+                  width: 20rem; /* preferred width */
                   max-width: calc(100% - 2rem);
+                  /* Keep the panel within the image height */
+                  max-height: calc(100% - 3rem);
+                  overflow-y: auto;
                   opacity: 0;
-                  transform: translateX(14px) scale(0.995);
+                  transform: translateY(-6px) scale(0.995);
                   box-shadow: 0 20px 40px rgba(2,6,23,0.5);
                 }
                 .pricing-animate { animation: pricingAppear 680ms cubic-bezier(.2,.9,.2,1) forwards; }
                 @keyframes pricingAppear { from { opacity: 0; transform: translateX(14px) scale(0.995); } to { opacity: 1; transform: translateX(0) scale(1); } }
 
                 .pricing-lines { display: flex; flex-direction: column; gap: 8px; }
+                .pricing-panel::-webkit-scrollbar { width: 10px; }
+                .pricing-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
+                .pricing-panel { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
                 .pricing-line { opacity: 0; transform: translateX(10px); }
                 .pricing-line.show { animation: lineIn 420ms cubic-bezier(.2,.9,.2,1) forwards; }
                 @keyframes lineIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
@@ -170,6 +176,19 @@ const PrivateTourDetail: React.FC = () => {
                 .carousel-title.show { opacity: 1; transform: translateY(0) scale(1); }
                 @media (min-width: 768px) { .carousel-title .title-large { font-size: 48px; } }
                 @media (min-width: 1024px) { .carousel-title .title-large { font-size: 64px; } }
+
+                /* Responsive adjustments: place panel at top and full-width on small screens */
+                @media (max-width: 768px) {
+                  .pricing-panel {
+                    position: absolute !important;
+                    left: 1rem !important;
+                    right: 1rem !important;
+                    top: 1rem !important;
+                    transform: none !important;
+                    width: calc(100% - 2rem) !important;
+                    max-height: 40%;
+                  }
+                }
               `}</style>
             {images.map((img, idx) => (
               <div
@@ -191,7 +210,7 @@ const PrivateTourDetail: React.FC = () => {
                 {/* Dynamic panel based on image index */}
                 {selectedImage === idx && (
                   <div
-                    className={`absolute right-6 top-1/2 -translate-y-1/2 z-30 pricing-panel pricing-animate`}
+                    className={`absolute right-6 top-6 z-30 pricing-panel pricing-animate`}
                   >
                     {/* Image 1: Activities */}
                     {idx === 0 && (
@@ -203,7 +222,12 @@ const PrivateTourDetail: React.FC = () => {
                           )}
                         </div>
                         <div className="pricing-lines">
-                          {[tour.activity_1, tour.activity_2, tour.activity_3, tour.activity_4]
+                          {[
+                            tour.activity_1,
+                            tour.activity_2,
+                            tour.activity_3,
+                            tour.activity_4,
+                          ]
                             .filter(Boolean)
                             .map((activity, i) => (
                               <div
@@ -212,8 +236,12 @@ const PrivateTourDetail: React.FC = () => {
                                 style={{ animationDelay: `${(i + 1) * 0.12}s` }}
                               >
                                 <div className="flex items-start gap-2">
-                                  <span className="text-teal-400 font-bold">{i + 1}.</span>
-                                  <div className="line-label flex-1">{activity}</div>
+                                  <span className="text-teal-400 font-bold">
+                                    {i + 1}.
+                                  </span>
+                                  <div className="line-label flex-1">
+                                    {activity}
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -297,7 +325,9 @@ const PrivateTourDetail: React.FC = () => {
                             style={{ animationDelay: `0.6s` }}
                           >
                             <div className="flex justify-between items-center">
-                              <div className="line-label">Children (under 5)</div>
+                              <div className="line-label">
+                                Children (under 5)
+                              </div>
                               <div className="line-price">
                                 ${tour.price_children_under_5}
                               </div>
@@ -311,8 +341,8 @@ const PrivateTourDetail: React.FC = () => {
 
                 {/* Title overlay shown when this image is active */}
                 {selectedImage === idx && (
-                  <div className="absolute top-8 left-1/2 z-40 -translate-x-1/2 carousel-title show text-center">
-                    <h2 className="title-large text-3xl lg:text-6xl">
+                  <div className="absolute top-6 left-6 z-40 carousel-title show text-left">
+                    <h2 className="title-large text-2xl md:text-3xl lg:text-4xl">
                       {tour.title}
                     </h2>
                   </div>

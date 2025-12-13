@@ -58,7 +58,15 @@ const AdminPrivateTours: React.FC = () => {
     duration: "",
     tour_notes: "",
     show_additional_options: false,
-    available_days: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"],
+    available_days: [
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+      "SUNDAY",
+    ],
     activity_1: "",
     activity_2: "",
     activity_3: "",
@@ -249,7 +257,9 @@ const AdminPrivateTours: React.FC = () => {
                 </h3>
                 <div
                   className="text-gray-600 text-sm mb-4 line-clamp-2"
-                  dangerouslySetInnerHTML={{ __html: formatTextToHtml(tour.description) }}
+                  dangerouslySetInnerHTML={{
+                    __html: formatTextToHtml(tour.description),
+                  }}
                 />
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-teal-600 font-semibold">
@@ -332,8 +342,15 @@ const AdminPrivateTours: React.FC = () => {
               />
               {/* Live preview for description */}
               <div className="mt-3">
-                <div className="text-sm font-semibold text-gray-700 mb-2">Preview</div>
-                <div className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800" dangerouslySetInnerHTML={{ __html: formatTextToHtml(editingTour.description) }} />
+                <div className="text-sm font-semibold text-gray-700 mb-2">
+                  Preview
+                </div>
+                <div
+                  className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800"
+                  dangerouslySetInnerHTML={{
+                    __html: formatTextToHtml(editingTour.description),
+                  }}
+                />
               </div>
             </div>
 
@@ -499,8 +516,15 @@ const AdminPrivateTours: React.FC = () => {
                 placeholder="List what's included in the tour"
               />
               <div className="mt-3">
-                <div className="text-sm font-semibold text-gray-700 mb-2">Preview (Included)</div>
-                <div className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800" dangerouslySetInnerHTML={{ __html: formatTextToHtml(editingTour.whats_included) }} />
+                <div className="text-sm font-semibold text-gray-700 mb-2">
+                  Preview (Included)
+                </div>
+                <div
+                  className="prose max-w-none p-3 bg-gray-50 border rounded-lg text-gray-800"
+                  dangerouslySetInnerHTML={{
+                    __html: formatTextToHtml(editingTour.whats_included),
+                  }}
+                />
               </div>
             </div>
 
@@ -537,21 +561,21 @@ const AdminPrivateTours: React.FC = () => {
             {/* Summary */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Summary (max 100 characters)
+                Summary (max 500 characters)
               </label>
               <textarea
                 value={editingTour.summary || ""}
                 onChange={(e) => {
-                  const value = e.target.value.slice(0, 100);
+                  const value = e.target.value.slice(0, 500);
                   setEditingTour({ ...editingTour, summary: value });
                 }}
-                maxLength={100}
-                rows={2}
+                maxLength={500}
+                rows={4}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Brief tour summary (will be shown in carousel)"
               />
               <div className="text-xs text-gray-500 mt-1">
-                {(editingTour.summary || "").length}/100 characters
+                {(editingTour.summary || "").length}/500 characters
               </div>
             </div>
 
@@ -568,7 +592,11 @@ const AdminPrivateTours: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      value={editingTour[`activity_${num}` as keyof PrivateTour] as string || ""}
+                      value={
+                        (editingTour[
+                          `activity_${num}` as keyof PrivateTour
+                        ] as string) || ""
+                      }
                       onChange={(e) =>
                         setEditingTour({
                           ...editingTour,
@@ -589,7 +617,15 @@ const AdminPrivateTours: React.FC = () => {
                 Available Days
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].map((day) => (
+                {[
+                  "MONDAY",
+                  "TUESDAY",
+                  "WEDNESDAY",
+                  "THURSDAY",
+                  "FRIDAY",
+                  "SATURDAY",
+                  "SUNDAY",
+                ].map((day) => (
                   <label
                     key={day}
                     className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"

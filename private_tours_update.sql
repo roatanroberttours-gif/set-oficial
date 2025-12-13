@@ -12,9 +12,9 @@ ADD COLUMN activity_2 TEXT,
 ADD COLUMN activity_3 TEXT,
 ADD COLUMN activity_4 TEXT;
 
--- 3. Agregar columna para resumen (máximo 100 caracteres)
+-- 3. Add column for summary (max 500 characters)
 ALTER TABLE private_tours 
-ADD COLUMN summary VARCHAR(100);
+ADD COLUMN summary VARCHAR(500);
 
 -- Comentarios sobre los campos:
 COMMENT ON COLUMN private_tours.available_days IS 'Días de la semana en que el tour está disponible';
@@ -22,7 +22,7 @@ COMMENT ON COLUMN private_tours.activity_1 IS 'Primera actividad del tour';
 COMMENT ON COLUMN private_tours.activity_2 IS 'Segunda actividad del tour';
 COMMENT ON COLUMN private_tours.activity_3 IS 'Tercera actividad del tour';
 COMMENT ON COLUMN private_tours.activity_4 IS 'Cuarta actividad del tour';
-COMMENT ON COLUMN private_tours.summary IS 'Resumen breve del tour (máximo 100 caracteres)';
+COMMENT ON COLUMN private_tours.summary IS 'Brief tour summary (max 500 characters)';
 
 -- Verificar que las columnas se agregaron correctamente
 SELECT column_name, data_type, character_maximum_length 

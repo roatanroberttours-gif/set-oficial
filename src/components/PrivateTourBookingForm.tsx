@@ -90,8 +90,16 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
   // Helper function to check if a date is valid based on available days
   const isDateAvailable = (dateStr: string): boolean => {
     if (!availableDays || availableDays.length === 0) return true;
-    const date = new Date(dateStr + 'T00:00:00');
-    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const date = new Date(dateStr + "T00:00:00");
+    const dayNames = [
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+    ];
     const dayName = dayNames[date.getDay()];
     return availableDays.includes(dayName);
   };
@@ -136,7 +144,10 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
           if (!mounted) return;
           setTourData(privateData);
           // Store available days for date validation
-          if (privateData.available_days && Array.isArray(privateData.available_days)) {
+          if (
+            privateData.available_days &&
+            Array.isArray(privateData.available_days)
+          ) {
             setAvailableDays(privateData.available_days);
           }
           // Determine per-person price from tiered fields
@@ -740,7 +751,11 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
                   onChange={(e) => {
                     const selectedDate = e.target.value;
                     if (selectedDate && !isDateAvailable(selectedDate)) {
-                      alert(`This tour is only available on: ${availableDays.join(', ')}. Please select a valid date.`);
+                      alert(
+                        `This tour is only available on: ${availableDays.join(
+                          ", "
+                        )}. Please select a valid date.`
+                      );
                       return;
                     }
                     setFormData({
@@ -752,7 +767,10 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
                 />
                 {availableDays.length > 0 && (
                   <p className="text-xs text-gray-600 mt-2">
-                    📅 Available days: <span className="font-semibold text-teal-600">{availableDays.join(', ')}</span>
+                    📅 Available days:{" "}
+                    <span className="font-semibold text-teal-600">
+                      {availableDays.join(", ")}
+                    </span>
                   </p>
                 )}
               </div>

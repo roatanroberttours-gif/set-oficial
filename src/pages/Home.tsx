@@ -48,8 +48,6 @@ const Home: React.FC = () => {
     <div className="min-h-screen">
       <Hero />
 
-    
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-transparent">
           {/* Elfsight All-in-One Reviews embed (replaces TripAdvisor + Facebook cards) */}
@@ -61,7 +59,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
-        {/* VIP Tours Section - Enhanced Premium Design */}
+      {/* VIP Tours Section - Enhanced Premium Design */}
       <section className="py-16 bg-transparent relative overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 pointer-events-none">
@@ -81,7 +79,8 @@ const Home: React.FC = () => {
               Premium Private Tours
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Discover paradise with our handpicked luxury experiences — limited availability
+              Discover paradise with our handpicked luxury experiences — limited
+              availability
             </p>
           </div>
 
@@ -125,21 +124,35 @@ const Home: React.FC = () => {
                   />
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                  
+
                   {/* Floating Price Tag */}
                   <div className="absolute bottom-4 left-4 right-4">
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Starting from</p>
+                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                            Starting from
+                          </p>
                           <p className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
                             ${tour.price_1_person}
                           </p>
-                          <p className="text-xs text-gray-600 font-medium">per person</p>
+                          <p className="text-xs text-gray-600 font-medium">
+                            per person
+                          </p>
                         </div>
                         <div className="bg-gradient-to-br from-teal-500 to-blue-600 rounded-full p-3 shadow-lg">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 7l5 5m0 0l-5 5m5-5H6"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -152,7 +165,7 @@ const Home: React.FC = () => {
                   <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors">
                     {tour.title}
                   </h3>
-                  
+
                   <div
                     className="text-gray-600 mb-5 line-clamp-3 leading-relaxed"
                     dangerouslySetInnerHTML={{
