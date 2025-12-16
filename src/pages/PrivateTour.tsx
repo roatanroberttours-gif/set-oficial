@@ -150,46 +150,6 @@ const PrivateTour: React.FC = () => {
                       : tour.description}
                   </div>
 
-                  {/* Pricing Info - Modern Pill Design */}
-                  <div className="bg-gradient-to-br from-gray-50 to-teal-50/50 rounded-2xl p-6 mb-6 border border-teal-100/50">
-                    <div className="flex items-center mb-4">
-                      <div className="p-2 bg-teal-100 rounded-lg mr-3">
-                        <DollarSign className="w-5 h-5 text-teal-600" />
-                      </div>
-                      <span className="font-bold text-gray-800 text-lg">
-                        Base Rates
-                      </span>
-                    </div>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                        <span className="text-gray-500 font-medium">1-2 Persons</span>
-                        <div className="flex gap-4">
-                          <div className="text-right">
-                            <span className="block text-xs text-gray-400">1 Person</span>
-                            <span className="font-bold text-gray-900">${tour.price_1_person}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-xs text-gray-400">2 Persons</span>
-                            <span className="font-bold text-gray-900">${tour.price_2_persons}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                        <span className="text-gray-500 font-medium">Groups</span>
-                        <div className="flex gap-4">
-                          <div className="text-right">
-                            <span className="block text-xs text-gray-400">3 Persons</span>
-                            <span className="font-bold text-gray-900">${tour.price_3_persons}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="block text-xs text-gray-400">+4 Persons</span>
-                            <span className="font-bold text-gray-900">${tour.price_4_persons}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Features Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     {tour.whats_included && (
