@@ -27,12 +27,12 @@ const PolicyConfirmModal: React.FC<Props> = ({ isOpen, onClose, onAccept }) => {
           </p>
 
           <p className="text-sm text-gray-600">
-            View full policy: <Link to="/politica-de-cancelacion" className="text-teal-600 underline">Política de Cancelación</Link>
+            View full policy: <Link to="/politica-de-cancelacion" className="text-teal-600 underline">Cancellation Policy</Link>
           </p>
 
           <div className="flex justify-end gap-3 mt-4">
-            <button onClick={onClose} className="px-4 py-2 border rounded-lg">Cancelar</button>
-            <button onClick={onAccept} className="px-5 py-2 bg-teal-600 text-white rounded-lg">Acepto</button>
+            <button onClick={onClose} className="px-4 py-2 border rounded-lg">Cancel</button>
+            <button onClick={onAccept} className="px-5 py-2 bg-teal-600 text-white rounded-lg">I Accept</button>
           </div>
         </div>
       </div>

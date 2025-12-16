@@ -681,59 +681,22 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Cruise Ship Name or Resort Name *
                 </label>
-                <select
+                <input
+                  type="text"
                   required
                   value={formData.cruiseShipOrResortName}
                   onChange={(e) => {
                     const val = e.target.value;
                     setFormData({ ...formData, cruiseShipOrResortName: val });
-                    const found = meetingPoints.find(
-                      (m) => String(m.title) === val || String(m.id) === val
-                    );
-                    // Prefer matching by title; if option value is id then match by id
-                    if (found) setSelectedMeetingPoint(found);
-                    else setSelectedMeetingPoint(null);
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
-                >
-                  <option value="">Select a meeting point</option>
-                  {meetingPoints.map((mp) => (
-                    <option key={mp.id} value={mp.title}>
-                      {mp.title}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Choose the meeting point where you will be picked up.
-                </p>
-
-                {selectedMeetingPoint && (
-                  <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="text-sm font-semibold text-green-800">
-                      Meeting Point
-                    </h4>
-                    {selectedMeetingPoint.zone && (
-                      <div className="text-sm text-green-700 mt-1">
-                        <strong>Zone:</strong> {selectedMeetingPoint.zone}
-                      </div>
-                    )}
-                    {selectedMeetingPoint.instructions && (
-                      <div className="text-sm text-gray-700 mt-2">
-                        {selectedMeetingPoint.instructions}
-                      </div>
-                    )}
-                    {selectedMeetingPoint.map_url && (
-                      <div className="mt-3">
-                        <a
-                          href={selectedMeetingPoint.map_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
-                        >
-                          Map
-                        </a>
-                      </div>
-                    )}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Enter your cruise ship name or resort name"
+                />
+                {formData.cruiseShipOrResortName && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      The administrator will provide you with meeting point instructions when they contact you.
+                    </p>
                   </div>
                 )}
               </div>
@@ -866,7 +829,7 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
             <div className="flex items-center justify-end space-x-6 pt-4">
               {/* Base tour total (if available) */}
               <div className="text-right">
-                <div className="text-sm text-gray-600">Precio por persona</div>
+                <div className="text-sm text-gray-600">Price per person</div>
                 <div className="text-lg font-bold text-gray-800">
                   {computedPerPersonPrice != null
                     ? `$${computedPerPersonPrice.toFixed(2)}`
@@ -875,7 +838,7 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
               </div>
 
               <div className="text-right">
-                <div className="text-sm text-gray-600">Invitados (5+)</div>
+                <div className="text-sm text-gray-600">Guests (5+)</div>
                 <div className="text-lg font-bold text-gray-800">
                   {Number(formData.numberOfGuestsAge5Up)}
                 </div>
@@ -883,7 +846,7 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
 
               {/* Extras subtotal */}
               <div className="text-right">
-                <div className="text-sm text-gray-600">Adicionales (total)</div>
+                <div className="text-sm text-gray-600">Extras (total)</div>
                 <div className="text-lg font-bold text-gray-800">
                   ${extrasSubtotal.toFixed(2)}
                 </div>
@@ -891,7 +854,7 @@ const PrivateTourBookingForm: React.FC<BookingFormProps> = ({
 
               {/* Grand total */}
               <div className="text-right">
-                <div className="text-sm text-gray-600">Total estimado</div>
+                <div className="text-sm text-gray-600">Estimated Total</div>
                 <div className="text-xl font-extrabold text-teal-600">
                   $
                   {(
