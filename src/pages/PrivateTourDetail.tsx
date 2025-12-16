@@ -697,10 +697,6 @@ const PrivateTourDetail: React.FC = () => {
                   navigate(`/private-tour/book/${tour.id}`);
                 }}
               />
-
-              <p className="text-center text-gray-500 text-sm mt-4">
-                Instant confirmation • Free cancellation
-              </p>
             </div>
           </div>
         </div>
