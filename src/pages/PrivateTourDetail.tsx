@@ -396,63 +396,73 @@ const PrivateTourDetail: React.FC = () => {
                             )}
                           </div>
                           <div className="pricing-lines">
-                            <div
-                              className={`pricing-line show`}
-                              style={{ animationDelay: `0.12s` }}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div className="line-label">1 Person</div>
-                                <div className="line-price">
-                                  ${tour.price_1_person}
+                            {tour.price_1_person > 0 && (
+                              <div
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `0.12s` }}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="line-label">1 Person</div>
+                                  <div className="line-price">
+                                    ${tour.price_1_person}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div
-                              className={`pricing-line show`}
-                              style={{ animationDelay: `0.24s` }}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div className="line-label">2 Persons</div>
-                                <div className="line-price">
-                                  ${tour.price_2_persons}
+                            )}
+                            {tour.price_2_persons > 0 && (
+                              <div
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `0.24s` }}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="line-label">2 Persons</div>
+                                  <div className="line-price">
+                                    ${tour.price_2_persons}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div
-                              className={`pricing-line show`}
-                              style={{ animationDelay: `0.36s` }}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div className="line-label">3 Persons</div>
-                                <div className="line-price">
-                                  ${tour.price_3_persons}
+                            )}
+                            {tour.price_3_persons > 0 && (
+                              <div
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `0.36s` }}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="line-label">3 Persons</div>
+                                  <div className="line-price">
+                                    ${tour.price_3_persons}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div
-                              className={`pricing-line show`}
-                              style={{ animationDelay: `0.48s` }}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div className="line-label">4+ Persons</div>
-                                <div className="line-price">
-                                  ${tour.price_4_persons}
+                            )}
+                            {tour.price_4_persons > 0 && (
+                              <div
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `0.48s` }}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="line-label">4+ Persons</div>
+                                  <div className="line-price">
+                                    ${tour.price_4_persons}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div
-                              className={`pricing-line show`}
-                              style={{ animationDelay: `0.6s` }}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div className="line-label">
-                                  Children (under 5)
-                                </div>
-                                <div className="line-price">
-                                  ${tour.price_children_under_5}
+                            )}
+                            {tour.price_children_under_5 > 0 && (
+                              <div
+                                className={`pricing-line show`}
+                                style={{ animationDelay: `0.6s` }}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="line-label">
+                                    Children (under 5)
+                                  </div>
+                                  <div className="line-price">
+                                    ${tour.price_children_under_5}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </>
                       )}
@@ -633,52 +643,68 @@ const PrivateTourDetail: React.FC = () => {
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 text-teal-600 mr-2" />
-                    <span className="text-gray-700 font-medium">1 Person</span>
-                  </div>
-                  <span className="text-teal-600 font-bold text-xl">
-                    ${tour.price_1_person}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 text-teal-600 mr-2" />
-                    <span className="text-gray-700 font-medium">2 Persons</span>
-                  </div>
-                  <span className="text-teal-600 font-bold text-xl">
-                    ${tour.price_2_persons}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 text-teal-600 mr-2" />
-                    <span className="text-gray-700 font-medium">3 Persons</span>
-                  </div>
-                  <span className="text-teal-600 font-bold text-xl">
-                    ${tour.price_3_persons}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 text-teal-600 mr-2" />
-                    <span className="text-gray-700 font-medium">
-                      4+ Persons
+                {tour.price_1_person > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 text-teal-600 mr-2" />
+                      <span className="text-gray-700 font-medium">
+                        1 Person
+                      </span>
+                    </div>
+                    <span className="text-teal-600 font-bold text-xl">
+                      ${tour.price_1_person}
                     </span>
                   </div>
-                  <span className="text-teal-600 font-bold text-xl">
-                    ${tour.price_4_persons}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-300">
-                  <span className="text-gray-600 text-sm font-medium">
-                    Children (under 5)
-                  </span>
-                  <span className="text-gray-800 font-bold text-lg">
-                    ${tour.price_children_under_5}
-                  </span>
-                </div>
+                )}
+                {tour.price_2_persons > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 text-teal-600 mr-2" />
+                      <span className="text-gray-700 font-medium">
+                        2 Persons
+                      </span>
+                    </div>
+                    <span className="text-teal-600 font-bold text-xl">
+                      ${tour.price_2_persons}
+                    </span>
+                  </div>
+                )}
+                {tour.price_3_persons > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 text-teal-600 mr-2" />
+                      <span className="text-gray-700 font-medium">
+                        3 Persons
+                      </span>
+                    </div>
+                    <span className="text-teal-600 font-bold text-xl">
+                      ${tour.price_3_persons}
+                    </span>
+                  </div>
+                )}
+                {tour.price_4_persons > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 text-teal-600 mr-2" />
+                      <span className="text-gray-700 font-medium">
+                        4+ Persons
+                      </span>
+                    </div>
+                    <span className="text-teal-600 font-bold text-xl">
+                      ${tour.price_4_persons}
+                    </span>
+                  </div>
+                )}{" "}
+                {tour.price_children_under_5 > 0 && (
+                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-300">
+                    <span className="text-gray-600 text-sm font-medium">
+                      Children (under 5)
+                    </span>
+                    <span className="text-gray-800 font-bold text-lg">
+                      ${tour.price_children_under_5}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Book Button */}
