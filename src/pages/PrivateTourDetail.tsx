@@ -390,7 +390,15 @@ const PrivateTourDetail: React.FC = () => {
                       {idx === 2 && (
                         <>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="title">Pricing</div>
+                            <div className="title">
+                              {tour.price_1_person === 0 &&
+                              tour.price_2_persons === 0 &&
+                              tour.price_3_persons === 0 &&
+                              tour.price_4_persons === 0 &&
+                              tour.price_children_under_5 === 0
+                                ? "You Choose Your Package"
+                                : "Pricing"}
+                            </div>
                             {tour.duration && (
                               <div className="duration">{tour.duration}</div>
                             )}
@@ -632,7 +640,13 @@ const PrivateTourDetail: React.FC = () => {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
                   <DollarSign className="w-6 h-6 text-teal-600 mr-2" />
-                  Pricing
+                  {tour.price_1_person === 0 &&
+                  tour.price_2_persons === 0 &&
+                  tour.price_3_persons === 0 &&
+                  tour.price_4_persons === 0 &&
+                  tour.price_children_under_5 === 0
+                    ? "You Choose Your Package"
+                    : "Pricing"}
                 </h3>
                 {tour.duration && (
                   <div className="flex items-center text-gray-600 mt-3">
